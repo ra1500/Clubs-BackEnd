@@ -48,6 +48,7 @@ public class UserEntityDtoTransformer {
         dto.setLocation(userEntity.getLocation());
         dto.setContactInfo(userEntity.getContactInfo());
         dto.setFriendsSet(getFriendshipsSetService(userEntity));
+        dto.setClubsSet(userEntity.getClubs()); // **********
         return dto;
     }
 

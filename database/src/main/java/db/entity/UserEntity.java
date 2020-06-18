@@ -7,10 +7,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @DynamicUpdate
 @Table(uniqueConstraints= @UniqueConstraint(columnNames={"userName"}))
@@ -60,6 +57,13 @@ public class UserEntity implements Serializable {
     @JsonIgnore
     @OneToMany(mappedBy = "userEntity", fetch = FetchType.EAGER)
     private Set<FriendshipsEntity> friendsSet = new HashSet<>();
+
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ClubsEntityId")
+    @Column
+    private Set<ClubsEntity> clubs;
+
 
     public UserEntity() {
         super();
@@ -173,6 +177,14 @@ public class UserEntity implements Serializable {
 
     public void setFriendsSet(Set<FriendshipsEntity> friendsSet) {
         this.friendsSet = friendsSet;
+    }
+
+    public Set<ClubsEntity> getClubs() {
+        return clubs;
+    }
+
+    public void setClubs(Set<ClubsEntity> clubs) {
+        this.clubs = clubs;
     }
 
     @Override

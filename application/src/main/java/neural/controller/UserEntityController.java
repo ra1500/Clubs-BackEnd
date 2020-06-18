@@ -46,6 +46,8 @@ public class UserEntityController extends AbstractRestController {
         String user = values[0];
 
         UserEntityDto userEntityDto = userEntityService.getUserEntityWithoutRemovedFriends(user);
+
+        userEntityDto.setClubsSet(null);
         userEntityDto.setPassword(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         if (userEntityDto.getFriendsSet().isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
@@ -67,6 +69,7 @@ public class UserEntityController extends AbstractRestController {
         String user = values[0];
 
         UserEntityDto userEntityDto = userEntityService.getFriendsUserEntityWithoutRemovedFriends(user, friendId);
+        userEntityDto.setClubsSet(null);
         userEntityDto.setPassword(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         if (userEntityDto.getFriendsSet().isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
@@ -88,6 +91,7 @@ public class UserEntityController extends AbstractRestController {
         String user = values[0];
 
         UserEntityDto userEntityDto = userEntityService.getSetofFriendsofFriend(user, friendId);
+        userEntityDto.setClubsSet(null);
         userEntityDto.setPassword(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         if (userEntityDto.getFriendsSet().isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
@@ -108,13 +112,14 @@ public class UserEntityController extends AbstractRestController {
         String user = values[0];
 
         UserEntityDto userEntityDto = userEntityService.getUserEntityRemovedFriendsOnly(user);
+        userEntityDto.setClubsSet(null);
         userEntityDto.setPassword(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         if (userEntityDto.getFriendsSet().isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         return ResponseEntity.ok(userEntityDto);
     }
 
-    // GET a user (without the friendships Set).
+    // GET a user (without the friendships Set or clubs set).
     @ApiOperation(value = "getUserEntity")
     @RequestMapping(value = "/pr", method = RequestMethod.GET)
     public ResponseEntity<UserEntityDto> getUserEntity2(
@@ -130,6 +135,7 @@ public class UserEntityController extends AbstractRestController {
         UserEntityDto userEntityDto = userEntityService.getUserEntity(user);
         userEntityDto.setPassword(null);
         userEntityDto.setFriendsSet(null);
+        userEntityDto.setClubsSet(null);
         userEntityDto.setUserName(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         return ResponseEntity.ok(userEntityDto);
@@ -152,6 +158,7 @@ public class UserEntityController extends AbstractRestController {
         UserEntityDto userEntityDto = userEntityService.getFriendUserEntity(user, friendId);
         userEntityDto.setPassword(null);
         userEntityDto.setFriendsSet(null);
+        userEntityDto.setClubsSet(null);
         userEntityDto.setUserName(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         return ResponseEntity.ok(userEntityDto);
@@ -174,6 +181,48 @@ public class UserEntityController extends AbstractRestController {
         userEntityDto.setPassword(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         return ResponseEntity.ok(userEntityDto);
+    }
+
+    // GET a user and their clubs set/list (without the friendships Set).
+    @ApiOperation(value = "getUserEntity")
+    @RequestMapping(value = "/pa", method = RequestMethod.GET)
+    public ResponseEntity<UserEntityDto> getUserEntityClubs(
+            @RequestHeader("Authorization") String token)               {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        UserEntityDto userEntityDto = userEntityService.getUserEntity(user);
+        userEntityDto.setPassword(null);
+        userEntityDto.setFriendsSet(null);
+        userEntityDto.setUserName(null);
+        if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+        return ResponseEntity.ok(userEntityDto);
+    }
+
+    // GET. Public Profile Text
+    @ApiOperation(value = "publicProfileText")
+    @RequestMapping(value = "/pp{id}", method = RequestMethod.GET)
+    public ResponseEntity<UserEntityDto> getPermissionsEntityUserScorePublicProfilePage(
+            @RequestParam("id") final String userName) {
+        UserEntityDto foundUserEntity = userEntityService.getUserEntity(userName);
+        if (foundUserEntity == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+
+        if (foundUserEntity.getPublicProfile().equals("Public") ) {
+            foundUserEntity.setFriendsSet(null);
+            //foundUserEntity.setClubsSet(null);
+            foundUserEntity.setCreated(null);
+            foundUserEntity.setId(null);
+            foundUserEntity.setPassword(null);
+            foundUserEntity.setContactInfo(null);
+            foundUserEntity.setRelationshipStatus(null);
+            return ResponseEntity.ok(foundUserEntity);
+        }
+        else { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
     }
 
     // POST to add a new user
@@ -299,24 +348,6 @@ public class UserEntityController extends AbstractRestController {
         return ResponseEntity.ok(patchedUserEntityDto);
     }
 
-    // GET. Public Profile Text
-    @ApiOperation(value = "publicProfileText")
-    @RequestMapping(value = "/pp{id}", method = RequestMethod.GET)
-    public ResponseEntity<UserEntityDto> getPermissionsEntityUserScorePublicProfilePage(
-            @RequestParam("id") final String userName) {
-        UserEntityDto foundUserEntity = userEntityService.getUserEntity(userName);
-        if (foundUserEntity == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
 
-        if (foundUserEntity.getPublicProfile().equals("Public") ) {
-            foundUserEntity.setFriendsSet(null);
-            foundUserEntity.setCreated(null);
-            foundUserEntity.setId(null);
-            foundUserEntity.setPassword(null);
-            foundUserEntity.setContactInfo(null);
-            foundUserEntity.setRelationshipStatus(null);
-            return ResponseEntity.ok(foundUserEntity);
-        }
-        else { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
-    }
 
 }

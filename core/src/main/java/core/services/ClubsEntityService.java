@@ -3,8 +3,10 @@ package core.services;
 import core.transformers.ClubsEntityDtoTransformer;
 import db.entity.ClubsEntity;
 import db.entity.UserEntity;
+import db.entity.VotesEntity;
 import db.repository.ClubsRepositoryDAO;
 import db.repository.UserRepositoryDAO;
+import db.repository.VotesRepositoryDAO;
 import model.ClubsEntityDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +22,14 @@ public class ClubsEntityService {
     private final ClubsRepositoryDAO clubsRepositoryDAO;
     private final ClubsEntityDtoTransformer clubsEntityDtoTransformer;
     private final UserRepositoryDAO userRepositoryDAO;
+    private final VotesRepositoryDAO votesRepositoryDAO;
 
     public ClubsEntityService(final ClubsRepositoryDAO clubsRepositoryDAO,
-                                  final ClubsEntityDtoTransformer clubsEntityDtoTransformer, final UserRepositoryDAO userRepositoryDAO) {
+                                  final ClubsEntityDtoTransformer clubsEntityDtoTransformer, final UserRepositoryDAO userRepositoryDAO, VotesRepositoryDAO votesRepositoryDAO) {
         this.clubsRepositoryDAO = clubsRepositoryDAO;
         this.clubsEntityDtoTransformer = clubsEntityDtoTransformer;
         this.userRepositoryDAO = userRepositoryDAO;
+        this.votesRepositoryDAO = votesRepositoryDAO;
     }
 
     // GET
@@ -36,21 +40,63 @@ public class ClubsEntityService {
     // POST a new Club
     public ClubsEntityDto createClubsEntity(final ClubsEntityDto clubsEntityDto, final String userName) {
 
-        // a new club includes a set of members.
-       Set<UserEntity> newMembersSet = new HashSet<>();
-
-       // add the creator's UserEntity to the new set of members. Add the set of members to the new club.
+        // a new club includes a set of members. Add it, with the user, to the Dto.
+        Set<UserEntity> newMembersSet = new HashSet<>();
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
         newMembersSet.add(foundUserEntity);
         clubsEntityDto.setMembers(newMembersSet);
-
-        // add the new club to the user's set of club memberships
         ClubsEntity newClubsEntity = (clubsEntityDtoTransformer.generate(clubsEntityDto));
-        foundUserEntity.getClubs().add(newClubsEntity);
-        //userRepositoryDAO.saveAndFlush(foundUserEntity);
-        clubsRepositoryDAO.saveAndFlush(newClubsEntity);
+        ClubsEntity savedNewClubsEntity = clubsRepositoryDAO.saveAndFlush(newClubsEntity);
 
-        return clubsEntityDtoTransformer.generate(newClubsEntity);
+        // create the new 'alpha' vote. save it.
+        VotesEntity newAlphaVote = new VotesEntity();
+        newAlphaVote.setVoter(foundUserEntity);
+        newAlphaVote.setClub(savedNewClubsEntity);
+        newAlphaVote.setVoteType(new Long(1));
+        newAlphaVote.setVoteCast(userName);
+        VotesEntity savedNewVotesEntity = votesRepositoryDAO.saveAndFlush(newAlphaVote);
+
+        // add the new club to the user's set of club memberships. save it.
+        // TODO is this redundant?
+        foundUserEntity.getClubs().add(savedNewClubsEntity);
+        userRepositoryDAO.saveAndFlush(foundUserEntity);
+
+        // add the new set of votes to the club. save it again with this update.
+        //ClubsEntity pulledSavedNewClubsEntity = clubsRepositoryDAO.findOneById(savedNewClubsEntity.getId());
+        //VotesEntity pulledSavedNewVotesEntity = votesRepositoryDAO.findOneById(savedNewVotesEntity.getId());
+        //pulledSavedNewClubsEntity.getVotes().add(pulledSavedNewVotesEntity);
+        //clubsRepositoryDAO.findOneById(savedNewClubsEntity.getId()).getVotes().add(votesRepositoryDAO.findOneById(savedNewVotesEntity.getId()));
+        //clubsRepositoryDAO.saveAndFlush(pulledSavedNewClubsEntity);
+
+        return clubsEntityDtoTransformer.generate(savedNewClubsEntity);
+    }
+
+    // Quit club
+    public String userQuitClub(final String userName, final Long clubId) {
+
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
+
+        // TODO validate
+        // remove user from the club
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
+        Set<UserEntity> foundUserEntitySet = foundClubsEntity.getMembers();
+        foundUserEntitySet.removeIf(i -> i.getUserName().equals(userName));
+        foundClubsEntity.setMembers(foundUserEntitySet);
+
+        // remove the club from the user
+        Set<ClubsEntity> foundUserClubSet = foundUserEntity.getClubs();
+        foundUserClubSet.removeIf(i -> i.getId().equals(clubId));
+        foundUserEntity.setClubs(foundUserClubSet);
+
+        // remove the user's votes from the club.
+        //TODO
+        // TODO recalibrate vote counts and results
+
+        userRepositoryDAO.saveAndFlush(foundUserEntity);
+        clubsRepositoryDAO.saveAndFlush(foundClubsEntity);
+
+        String userRemoved = "user removed from club";
+        return userRemoved;
     }
 
 }

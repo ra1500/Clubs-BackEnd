@@ -24,6 +24,7 @@ public class ClubsEntityDtoTransformer {
         dto.setCurrentSize(clubsEntity.getCurrentSize());
         dto.setAlpha(clubsEntity.getAlpha());
         dto.setMembers(clubsEntity.getMembers());
+        dto.setVotes(clubsEntity.getVotes());
         return dto;
     }
 
@@ -37,7 +38,8 @@ public class ClubsEntityDtoTransformer {
                 dto.getMaxSize(),
                 dto.getCurrentSize(),
                 dto.getAlpha(),
-                dto.getMembers()
+                dto.getMembers(),
+                dto.getVotes()
         );
     }
 

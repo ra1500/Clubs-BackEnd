@@ -44,7 +44,11 @@ public class ClubsEntity implements Serializable {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "UserEntityId")
     @Column
-    private Set<UserEntity> members;
+    private Set<UserEntity> members = new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "club", fetch = FetchType.LAZY)
+    private Set<VotesEntity> votes = new HashSet<>();
 
     //@ManyToMany(fetch = FetchType.LAZY)
     //@JoinColumn(name = "UserEntityId")
@@ -70,7 +74,7 @@ public class ClubsEntity implements Serializable {
         this.alpha = alpha;
     }
 
-    public ClubsEntity(Long id, Date created, String clubName, String description, Long maxSize, Long currentSize, String alpha, Set<UserEntity> members) {
+    public ClubsEntity(Long id, Date created, String clubName, String description, Long maxSize, Long currentSize, String alpha, Set<UserEntity> members, Set<VotesEntity> votes) {
         this.id = id;
         this.created = created;
         this.clubName = clubName;
@@ -79,6 +83,7 @@ public class ClubsEntity implements Serializable {
         this.currentSize = currentSize;
         this.alpha = alpha;
         this.members = members;
+        this.votes = votes;
     }
 
     public Long getId() { return id; }
@@ -139,6 +144,14 @@ public class ClubsEntity implements Serializable {
 
     public void setMembers(Set<UserEntity> members) {
         this.members = members;
+    }
+
+    public Set<VotesEntity> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(Set<VotesEntity> votes) {
+        this.votes = votes;
     }
 
     @Override

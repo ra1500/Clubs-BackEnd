@@ -3,6 +3,7 @@ package model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import db.entity.UserEntity;
+import db.entity.VotesEntity;
 
 //import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -35,6 +36,9 @@ public class ClubsEntityDto implements Serializable {
 
     @JsonProperty("members")
     private Set<UserEntity> members;
+
+    @JsonProperty("votes")
+    private Set<VotesEntity> votes;
 
     public ClubsEntityDto() {
     }
@@ -101,5 +105,13 @@ public class ClubsEntityDto implements Serializable {
 
     public void setMembers(Set<UserEntity> members) {
         this.members = members;
+    }
+
+    public Set<VotesEntity> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(Set<VotesEntity> votes) {
+        this.votes = votes;
     }
 }

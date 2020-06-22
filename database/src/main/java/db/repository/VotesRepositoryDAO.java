@@ -1,19 +1,20 @@
 package db.repository;
 
 import db.entity.ClubsEntity;
+import db.entity.UserEntity;
+import db.entity.VotesEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.util.Set;
 
 @Repository
-public interface ClubsRepositoryDAO extends JpaRepository<ClubsEntity, Long> {
+public interface VotesRepositoryDAO extends JpaRepository<VotesEntity, Long> {
 
-    ClubsEntity findOneById(Long id);
+    VotesEntity findOneById(Long id);
 
+    Set<VotesEntity> findAllByVoterAndClub(UserEntity userEntity, ClubsEntity clubsEntity);
 
     @Transactional
     Integer deleteOneById(Long id);

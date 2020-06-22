@@ -64,5 +64,24 @@ public class ClubsController extends AbstractRestController {
         return ResponseEntity.ok(savedClubsEntityDto);
     }
 
+    // GET Quit club (remove user from club)
+    @RequestMapping(value = "/c{cId}", method = RequestMethod.GET)
+    public ResponseEntity<String> quitClubsEntity(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("cId") final Long clubId) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        clubsEntityService.userQuitClub(user, clubId);
+
+        String quitClubMessage = "quit club command";
+        return ResponseEntity.ok(quitClubMessage);
+    }
+
 
 }

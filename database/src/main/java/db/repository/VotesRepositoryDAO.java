@@ -15,6 +15,7 @@ public interface VotesRepositoryDAO extends JpaRepository<VotesEntity, Long> {
     VotesEntity findOneById(Long id);
 
     Set<VotesEntity> findAllByVoterAndClub(UserEntity userEntity, ClubsEntity clubsEntity);
+    VotesEntity findOneByVoterAndVoteTypeAndClub(UserEntity userEntity, Long clubType, ClubsEntity clubsEntity);
 
     @Transactional
     Integer deleteOneById(Long id);

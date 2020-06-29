@@ -34,18 +34,27 @@ public class VotesEntityService {
         return votesEntityDtoTransformer.generate(votesRepositoryDAO.findOneById(votesEntityId));
     }
 
-    // POST a vote
+    // POST a alpha vote vote
     public VotesEntityDto createVotesEntity(final VotesEntityDto votesEntityDto, String userName, Long clubId) {
 
         // TODO validate that user is indeed in this club.
-        // TODO if an alpha vote or badge vote, ensure that voteCast is indeed in the list of members.
+        // TODO validate that proposed alpha exists AND is in the club.
 
-        // add the voter UserEntity
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
+
+        // check if vote already exists. if it does, just update it.
+        VotesEntity foundVotesEntity = votesRepositoryDAO.findOneByVoterAndVoteTypeAndClub(foundUserEntity, new Long(1), foundClubsEntity);
+        if (foundVotesEntity != null) {
+            foundVotesEntity.setVoteCast(votesEntityDto.getVoteCast());
+            votesRepositoryDAO.save(foundVotesEntity);
+            return votesEntityDtoTransformer.generate(foundVotesEntity);
+        }
+        else {
+        // add the voter UserEntity
         votesEntityDto.setVoter(foundUserEntity);
 
         // add the club to the vote (based on clubId)
-        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
         votesEntityDto.setClub(foundClubsEntity);
 
         VotesEntity savedVotesEntity = votesRepositoryDAO.saveAndFlush(votesEntityDtoTransformer.generate(votesEntityDto));
@@ -54,5 +63,6 @@ public class VotesEntityService {
         foundClubsEntity.getVotes().add(savedVotesEntity);
 
         return votesEntityDtoTransformer.generate(savedVotesEntity);
+        }
     }
 }

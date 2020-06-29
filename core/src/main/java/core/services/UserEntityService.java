@@ -95,6 +95,19 @@ public class UserEntityService {
         return userEntityDtoTransformer.generate(friendUserEntity);
     }
 
+    // GET friend userEntity for profile text in Network render single contact
+    public UserEntityDto getClubMember(final String user, final Long clubId, final Long memberId) {
+
+        //
+        UserEntity foundUserEntity = userEntityRepository.findOneByUserName(user);
+
+        UserEntity foundClubMember = userEntityRepository.findOneById(memberId);
+
+        // TODO validate user in club, and this member is in that club.
+
+        return userEntityDtoTransformer.generate(foundClubMember);
+    }
+
     // GET - friends of friend. friend's UserEntity without removed friends
     public UserEntityDto getFriendsUserEntityWithoutRemovedFriends(final String user, final Long friendId) {
 

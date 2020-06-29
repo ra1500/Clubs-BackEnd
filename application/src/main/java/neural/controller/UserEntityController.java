@@ -141,6 +141,29 @@ public class UserEntityController extends AbstractRestController {
         return ResponseEntity.ok(userEntityDto);
     }
 
+    // GET a user via id (without the friendships Set or clubs set). (to get from clubMembers).
+    @ApiOperation(value = "getUserEntity")
+    @RequestMapping(value = "/pu", method = RequestMethod.GET)
+    public ResponseEntity<UserEntityDto> getUserEntity3(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("cid") final Long clubId,
+            @RequestParam("mid") final Long memberId){
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        UserEntityDto userEntityDto = userEntityService.getClubMember(user, clubId, memberId);
+        userEntityDto.setPassword(null);
+        userEntityDto.setFriendsSet(null);
+        userEntityDto.setClubsSet(null);
+        if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+        return ResponseEntity.ok(userEntityDto);
+    }
+
     // GET a friend's userEntity for profile text (without the friendships Set).
     @ApiOperation(value = "getUserEntity")
     @RequestMapping(value = "/ps", method = RequestMethod.GET)

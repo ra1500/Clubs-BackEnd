@@ -10,11 +10,13 @@ import db.repository.VotesRepositoryDAO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import model.MessagesEntityDto;
+import model.VotesEntityDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Set;
@@ -60,4 +62,24 @@ public class VotesEntityController extends AbstractRestController {
         }
         return ResponseEntity.ok(userClubVotesSet);
     }
+
+    // POST or update a new/existing vote
+    @RequestMapping(value = "/b{cId}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<VotesEntityDto> createVotesEntity(
+            @Valid
+            @RequestBody final VotesEntityDto votesEntityDto,
+            @RequestHeader("Authorization") String token,
+            @RequestParam("cId") final Long clubId) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        VotesEntityDto savedVotesEntityDto = votesEntityService.createVotesEntity(votesEntityDto, user, clubId);
+        return ResponseEntity.ok(savedVotesEntityDto);
+    }
+
 }

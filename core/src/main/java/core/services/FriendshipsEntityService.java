@@ -118,10 +118,10 @@ public class FriendshipsEntityService {
             }
         }
 
-        // modify single-side. From 'pending' or 'Connected' to 'Decline' or 'remove'.
+        // modify single-side. From 'pending' or 'Connected' to 'remove'.
         else {
         foundFriendshipsEntity.setConnectionStatus(friendshipsEntityDto.getConnectionStatus());
-        foundFriendshipsEntity.setConnectionType(friendshipsEntityDto.getConnectionType());
+        //foundFriendshipsEntity.setConnectionType(friendshipsEntityDto.getConnectionType());  don't override to NULL. thus this is commented out.
         foundFriendshipsEntity.setVisibilityPermission(friendshipsEntityDto.getVisibilityPermission());
         friendshipsRepositoryDAO.save(foundFriendshipsEntity);
         return friendshipsEntityDtoTransformer.generate(foundFriendshipsEntity);

@@ -28,20 +28,24 @@ public class MessagesEntity implements Serializable {
     private UserEntity sender;
 
     @Column(length=3)
-    private Long receiverType;    // 1=User 2=Club 3=Guild
+    private Long receiverType;    // 1=IndividualUserFromClub 2=Club 3=Guild 4=IndividualUserFromContact 5=IndividualUserFromGuild
 
     @Column
     private Long receiverId;
 
+    @Column
+    private Long redFlag = new Long(0);  // was message read by receiver. 0=no 1=yes.
+
     public MessagesEntity() { super(); }
 
-    public MessagesEntity(Long id, Date created, String message, UserEntity sender, Long receiverType, Long receiverId) {
+    public MessagesEntity(Long id, Date created, String message, UserEntity sender, Long receiverType, Long receiverId, Long redFlag) {
         this.id = id;
         this.created = created;
         this.message = message;
         this.sender = sender;
         this.receiverType = receiverType;
         this.receiverId = receiverId;
+        this.redFlag = redFlag;
     }
 
     public Long getId() {
@@ -90,6 +94,14 @@ public class MessagesEntity implements Serializable {
 
     public void setReceiverId(Long receiverId) {
         this.receiverId = receiverId;
+    }
+
+    public Long getRedFlag() {
+        return redFlag;
+    }
+
+    public void setRedFlag(Long redFlag) {
+        this.redFlag = redFlag;
     }
 
     @Override

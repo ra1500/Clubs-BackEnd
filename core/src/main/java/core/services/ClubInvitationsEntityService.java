@@ -37,6 +37,13 @@ public class ClubInvitationsEntityService {
         return clubInvitationsEntityDtoTransformer.generate(clubInvitationsRepositoryDAO.findOneById(clubInvitationsEntityId));
     }
 
+    // GET new club invitations set
+    public Set<ClubInvitationsEntity> getNewClubInvitations(final String user) {
+        Set<ClubInvitationsEntity> foundNewClubInvitations = clubInvitationsRepositoryDAO.findAllByReceiverAndStatus(user, new Long(1));
+
+        return foundNewClubInvitations;
+    }
+
     // POST a new club invitation
     public ClubInvitationsEntityDto createClubInvitationsEntity(final ClubInvitationsEntityDto clubInvitationsEntityDto, final String userName, final Long clubId) {
 

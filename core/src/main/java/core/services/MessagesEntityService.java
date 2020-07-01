@@ -34,6 +34,7 @@ public class MessagesEntityService {
     public MessagesEntityDto createMessagesEntity(final MessagesEntityDto messagesEntityDto, String userName) {
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
         messagesEntityDto.setSender(foundUserEntity);
+        messagesEntityDto.setRedFlag(new Long(0));
         MessagesEntity messagesEntity = messagesRepositoryDAO.saveAndFlush(messagesEntityDtoTransformer.generate(messagesEntityDto));
         return messagesEntityDtoTransformer.generate(messagesEntity);
     }

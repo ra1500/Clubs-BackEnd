@@ -28,6 +28,9 @@ public class MessagesEntityDto implements Serializable {
     @JsonProperty("receiverId")
     private Long receiverId;
 
+    @JsonProperty("redFlag")
+    private Long redFlag;
+
     public MessagesEntityDto() {
     }
 
@@ -55,9 +58,7 @@ public class MessagesEntityDto implements Serializable {
         this.message = message;
     }
 
-    public UserEntity getSender() {
-        return sender;
-    }
+    public UserEntity getSender() {return sender;}
 
     public void setSender(UserEntity sender) {
         this.sender = sender;
@@ -78,4 +79,8 @@ public class MessagesEntityDto implements Serializable {
     public void setReceiverId(Long receiverId) {
         this.receiverId = receiverId;
     }
+
+    public Long getRedFlag() {return redFlag;}
+
+    public void setRedFlag(Long redFlag) {this.redFlag = redFlag;}
 }

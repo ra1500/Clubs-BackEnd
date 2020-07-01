@@ -66,15 +66,15 @@ public class UserEntityService {
 
     // GET (for alerts list of recent friendships invitations).
     public UserEntityDto getUserEntityRecentFriends(final String userName) {
-        LocalDate windowDate = LocalDate.now().minusDays(14);
+        //LocalDate windowDate = LocalDate.now().minusDays(14);
         UserEntityDto foundUser = userEntityDtoTransformer.generate(userEntityRepository.findOneByUserName(userName));
         Set<FriendshipsEntity> foundFriendshipsEntities = foundUser.getFriendsSet();
         foundFriendshipsEntities.removeIf(i -> !i.getConnectionStatus().equals("pending"));
         foundFriendshipsEntities.removeIf(i -> i.getInviter().equals(userName));
-        foundFriendshipsEntities.removeIf(i -> windowDate.isAfter(i.getCreated().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
+        //foundFriendshipsEntities.removeIf(i -> windowDate.isAfter(i.getCreated().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
         foundUser.setFriendsSet(foundFriendshipsEntities);
         for (FriendshipsEntity x : foundUser.getFriendsSet() ) {
-            x.setUserEntity(null); x.setCreated(null); x.setId(null); }
+            x.setUserEntity(null); }
         foundUser.setId(null); foundUser.setCreated(null); foundUser.setPublicProfile(null); foundUser.setId(null);
         return foundUser;
     }

@@ -23,6 +23,7 @@ public class MessagesEntityDtoTransformer {
         dto.setSender(messagesEntity.getSender());
         dto.setReceiverType(messagesEntity.getReceiverType());
         dto.setReceiverId(messagesEntity.getReceiverId());
+        dto.setRedFlag(messagesEntity.getRedFlag());
         return dto;
     }
 
@@ -34,7 +35,8 @@ public class MessagesEntityDtoTransformer {
                 dto.getMessage(),
                 dto.getSender(),
                 dto.getReceiverType(),
-                dto.getReceiverId()
+                dto.getReceiverId(),
+                dto.getRedFlag()
         );
     }
 

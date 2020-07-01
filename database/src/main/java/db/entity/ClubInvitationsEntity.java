@@ -27,7 +27,7 @@ public class ClubInvitationsEntity implements Serializable {
     private String receiver;
 
     @Column
-    private Long status; // pending, accepted, declined, blocked
+    private Long status; // 1pending, 2accepted, 3declined, 4blocked
 
     @ManyToOne
     @JoinColumn(name = "clubsEntityId")

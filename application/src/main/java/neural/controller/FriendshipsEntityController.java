@@ -70,6 +70,7 @@ public class FriendshipsEntityController extends AbstractRestController {
         return ResponseEntity.ok(savedFriendshipsEntityDto);
     }
 
+
     // GET a single friendship
     @ApiOperation(value = "getQuestionsEntity")
     @RequestMapping(value = "/{ct}", method = RequestMethod.GET)

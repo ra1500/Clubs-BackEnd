@@ -45,11 +45,29 @@ public class ClubInvitationsController extends AbstractRestController {
         return ResponseEntity.ok(foundNewClubInvitations);
     }
 
+    // GET a club invitation and provide the club details.
+    @ApiOperation(value = "getClubInvitationsEntity")
+    @RequestMapping(value = "/d", method = RequestMethod.GET)
+    public ResponseEntity<ClubInvitationsEntityDto> getSingleClubInvitation(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("cId") final Long clubInvitationEntityId) {
 
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        ClubInvitationsEntityDto foundNewClubInvitations = clubInvitationsEntityService.getClubInvitationsEntity(clubInvitationEntityId);
+        foundNewClubInvitations.getClub().setMembers(null);
+
+        return ResponseEntity.ok(foundNewClubInvitations);
+    }
 
     // POST a new club invitation
     @RequestMapping(value = "/b", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ClubInvitationsEntityDto> createClubsEntity(
+    public ResponseEntity<ClubInvitationsEntityDto> createClubInvitationsEntity(
             @Valid
             @RequestBody final ClubInvitationsEntityDto clubInvitationsEntityDto,
             @RequestHeader("Authorization") String token,
@@ -66,5 +84,22 @@ public class ClubInvitationsController extends AbstractRestController {
         return ResponseEntity.ok(savedClubInvitationsEntityDto);
     }
 
+    // POST accept or decline a club invitation
+    @RequestMapping(value = "/c", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ClubInvitationsEntityDto> updateClubInvitationEntity(
+            @Valid
+            @RequestBody final ClubInvitationsEntityDto clubInvitationsEntityDto,
+            @RequestHeader("Authorization") String token) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        ClubInvitationsEntityDto savedClubInvitationsEntityDto = clubInvitationsEntityService.updateClubInvitationsEntity(clubInvitationsEntityDto, user);
+        return ResponseEntity.ok(savedClubInvitationsEntityDto);
+    }
 
 }

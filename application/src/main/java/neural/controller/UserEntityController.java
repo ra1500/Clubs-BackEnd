@@ -2,6 +2,7 @@ package neural.controller;
 
 // import Paths;     --use later if wish to have Paths restricted/opened via separate class--
 import core.services.UserEntityService;
+import db.entity.ClubsEntity;
 import db.entity.UserEntity;
 import db.repository.UserRepositoryDAO;
 import io.swagger.annotations.Api;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Set;
 
 @RestController
 @RequestMapping(value = "/api/user", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -223,6 +225,29 @@ public class UserEntityController extends AbstractRestController {
         userEntityDto.setPassword(null);
         userEntityDto.setFriendsSet(null);
         userEntityDto.setUserName(null);
+        if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+        return ResponseEntity.ok(userEntityDto);
+    }
+
+    // GET a user and their clubs set/list (without the friendships Set).
+    @ApiOperation(value = "getUserEntity")
+    @RequestMapping(value = "/pb", method = RequestMethod.GET)
+    public ResponseEntity<UserEntityDto> getUserEntityEditClubs(
+            @RequestHeader("Authorization") String token)               {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        UserEntityDto userEntityDto = userEntityService.getUserEntity(user);
+        userEntityDto.setPassword(null);
+        userEntityDto.setFriendsSet(null);
+        userEntityDto.setUserName(null);
+        Set<ClubsEntity> clubsSet = userEntityDto.getClubsSet();
+        clubsSet.removeIf(i -> !i.getAlpha().equals(user));
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         return ResponseEntity.ok(userEntityDto);
     }

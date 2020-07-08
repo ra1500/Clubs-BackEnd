@@ -41,7 +41,7 @@ public class ClubsEntity implements Serializable {
     private String alpha; // leader of club. can edit club and remove members
 
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "UserEntityId")
     @Column
     private Set<UserEntity> members = new HashSet<>();

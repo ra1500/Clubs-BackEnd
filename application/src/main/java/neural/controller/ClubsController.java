@@ -42,26 +42,8 @@ public class ClubsController extends AbstractRestController {
 
         ClubsEntityDto clubsEntityDto = clubsEntityService.getClubsEntity(clubsEntityId );
         if (clubsEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+
         return ResponseEntity.ok(clubsEntityDto);
-    }
-
-    // POST a NEW club
-    @RequestMapping(value = "/b", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ClubsEntityDto> createClubsEntity(
-            @RequestHeader("Authorization") String token,
-            @Valid
-            @RequestBody
-            final ClubsEntityDto clubsEntityDto) {
-
-        String base64Credentials = token.substring("Basic".length()).trim();
-        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
-        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
-        // credentials = username:password
-        final String[] values = credentials.split(":", 2);
-        String user = values[0];
-
-        ClubsEntityDto savedClubsEntityDto = clubsEntityService.createClubsEntity(clubsEntityDto, user);
-        return ResponseEntity.ok(savedClubsEntityDto);
     }
 
     // GET Quit club (remove user from club)
@@ -83,5 +65,44 @@ public class ClubsController extends AbstractRestController {
         return ResponseEntity.ok(quitClubMessage);
     }
 
+    // POST a NEW club
+    @RequestMapping(value = "/b", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ClubsEntityDto> createClubsEntity(
+            @RequestHeader("Authorization") String token,
+            @Valid
+            @RequestBody
+            final ClubsEntityDto clubsEntityDto) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        ClubsEntityDto savedClubsEntityDto = clubsEntityService.createClubsEntity(clubsEntityDto, user);
+        return ResponseEntity.ok(savedClubsEntityDto);
+    }
+
+
+
+    // POST edit/update a clubsEntity (alpha only).
+    @RequestMapping(value = "/d", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ClubsEntityDto> updateClubsEntity(
+            @RequestHeader("Authorization") String token,
+            @Valid
+            @RequestBody
+            final ClubsEntityDto clubsEntityDto) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        ClubsEntityDto savedClubsEntityDto = clubsEntityService.updateClubsEntity(clubsEntityDto, user);
+        return ResponseEntity.ok(savedClubsEntityDto);
+    }
 
 }

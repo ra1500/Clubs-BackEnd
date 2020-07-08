@@ -34,7 +34,16 @@ public class ClubsEntityService {
 
     // GET
     public ClubsEntityDto getClubsEntity(final Long clubsEntityId) {
-        return clubsEntityDtoTransformer.generate(clubsRepositoryDAO.findOneById(clubsEntityId));
+
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubsEntityId);
+        Set<UserEntity> members = foundClubsEntity.getMembers();
+        for (UserEntity u : members) {
+            u.setPassword(null);
+            u.setCreated(null);
+        }
+        foundClubsEntity.setMembers(members);
+
+        return clubsEntityDtoTransformer.generate(foundClubsEntity);
     }
 
     // POST a new Club
@@ -61,14 +70,22 @@ public class ClubsEntityService {
         foundUserEntity.getClubs().add(savedNewClubsEntity);
         userRepositoryDAO.saveAndFlush(foundUserEntity);
 
-        // add the new set of votes to the club. save it again with this update.
-        //ClubsEntity pulledSavedNewClubsEntity = clubsRepositoryDAO.findOneById(savedNewClubsEntity.getId());
-        //VotesEntity pulledSavedNewVotesEntity = votesRepositoryDAO.findOneById(savedNewVotesEntity.getId());
-        //pulledSavedNewClubsEntity.getVotes().add(pulledSavedNewVotesEntity);
-        //clubsRepositoryDAO.findOneById(savedNewClubsEntity.getId()).getVotes().add(votesRepositoryDAO.findOneById(savedNewVotesEntity.getId()));
-        //clubsRepositoryDAO.saveAndFlush(pulledSavedNewClubsEntity);
-
         return clubsEntityDtoTransformer.generate(savedNewClubsEntity);
+    }
+
+    // POST edit/update a club (alpha can update).
+    public ClubsEntityDto updateClubsEntity(final ClubsEntityDto clubsEntityDto, final String userName) {
+
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubsEntityDto.getId());
+        foundClubsEntity.setClubName(clubsEntityDto.getClubName());
+        foundClubsEntity.setMaxSize(clubsEntityDto.getMaxSize());
+        foundClubsEntity.setDescription(clubsEntityDto.getDescription());
+
+        // no change in alpha. should be based on max votes, or oldest create date of membership.
+
+        clubsRepositoryDAO.save(foundClubsEntity);
+
+        return clubsEntityDtoTransformer.generate(foundClubsEntity);
     }
 
     // Quit club

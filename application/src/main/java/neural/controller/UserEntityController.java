@@ -252,7 +252,7 @@ public class UserEntityController extends AbstractRestController {
         return ResponseEntity.ok(userEntityDto);
     }
 
-    // GET. Public Profile Text
+    // GET. Public Profile
     @ApiOperation(value = "publicProfileText")
     @RequestMapping(value = "/pp{id}", method = RequestMethod.GET)
     public ResponseEntity<UserEntityDto> getPermissionsEntityUserScorePublicProfilePage(

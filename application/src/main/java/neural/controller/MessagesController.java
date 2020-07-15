@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.Set;
 
 @RestController
@@ -104,7 +105,7 @@ public class MessagesController extends AbstractRestController {
         UserEntity receiverUserEntity = userRepositoryDAO.findOneById(individualEntityId);
         Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(receiverUserEntity, senderUserEntity.getId(), new Long(1));
         for (MessagesEntity x : newReceivedMessages) {
-            if (x.getRedFlag() ==  null) {
+            if (x.getRedFlag().equals(new Long(0))) {
             x.setRedFlag(new Long(1));
             messagesRepositoryDAO.save(x);}
         }
@@ -139,12 +140,12 @@ public class MessagesController extends AbstractRestController {
         UserEntity friendsUserEntity = userRepositoryDAO.findOneByUserName(foundFriendshipsEntity.getFriend()); // TODO this is inefficent string search instead of id# search
 
         // get messages sent by logged in user
-        Set<MessagesEntity> twoUsersMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(senderUserEntity, friendsUserEntity.getId(), new Long(1));
+        Set<MessagesEntity> twoUsersMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(senderUserEntity, friendsUserEntity.getId(), new Long(4));
 
         // add messages sent by friend
-        Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(friendsUserEntity, senderUserEntity.getId(), new Long(1));
+        Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(friendsUserEntity, senderUserEntity.getId(), new Long(4));
         for (MessagesEntity x : newReceivedMessages) {
-            if (x.getRedFlag() == null) {
+            if (x.getRedFlag().equals(new Long(0))) {
                 x.setRedFlag(new Long(1));
                 messagesRepositoryDAO.save(x);}
         }
@@ -159,10 +160,10 @@ public class MessagesController extends AbstractRestController {
         return ResponseEntity.ok(twoUsersMessages);
     }
 
-    // GET list of ALL messages between ALL sets of two contacts.
+    // GET list of contacts with messages not yet read.
     @ApiOperation(value = "getAlertsContactsMessagesEntity")
     @RequestMapping(value = "/f", method = RequestMethod.GET)
-    public ResponseEntity<Set<MessagesEntity>> getAlertsContactMessages(
+    public ResponseEntity<Set<String>> getAlertsContactMessages(
             @RequestHeader("Authorization") String token ) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -175,13 +176,19 @@ public class MessagesController extends AbstractRestController {
 
         Set<MessagesEntity> alertsContactMessages = messagesRepositoryDAO.findAllByReceiverIdAndReceiverTypeAndRedFlag(receiverUserEntity.getId(), new Long(4), new Long(0));
 
-        return ResponseEntity.ok(alertsContactMessages);
+        // reduce the set to unique usernames.
+        Set<String> userNewMessagesSet = new HashSet<>();
+        for (MessagesEntity x : alertsContactMessages) {
+            userNewMessagesSet.add(x.getSender().getUserName());
+        }
+
+        return ResponseEntity.ok(userNewMessagesSet);
     }
 
-    // GET list of ALL messages between ALL sets of two club members.
+    // GET list of club members with messages not yet read.
     @ApiOperation(value = "getAlertsClubsMessagesEntity")
     @RequestMapping(value = "/g", method = RequestMethod.GET)
-    public ResponseEntity<Set<MessagesEntity>> getAlertsClubsMessages(
+    public ResponseEntity<Set<String>> getAlertsClubsMessages(
             @RequestHeader("Authorization") String token ) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -194,13 +201,19 @@ public class MessagesController extends AbstractRestController {
 
         Set<MessagesEntity> alertsContactMessages = messagesRepositoryDAO.findAllByReceiverIdAndReceiverTypeAndRedFlag(receiverUserEntity.getId(), new Long(1), new Long(0));
 
-        return ResponseEntity.ok(alertsContactMessages);
+        // reduce the set to unique usernames.
+        Set<String> userNewMessagesSet = new HashSet<>();
+        for (MessagesEntity x : alertsContactMessages) {
+            userNewMessagesSet.add(x.getSender().getUserName());
+        }
+
+        return ResponseEntity.ok(userNewMessagesSet);
     }
 
-    // GET list of ALL messages between ALL sets of two guild members.
+    // GET list of guild members with messages not yet read.
     @ApiOperation(value = "getAlertsGuildMessagesEntity")
     @RequestMapping(value = "/h", method = RequestMethod.GET)
-    public ResponseEntity<Set<MessagesEntity>> getAlertsGuildMessages(
+    public ResponseEntity<Set<String>> getAlertsGuildMessages(
             @RequestHeader("Authorization") String token ) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -213,7 +226,13 @@ public class MessagesController extends AbstractRestController {
 
         Set<MessagesEntity> alertsContactMessages = messagesRepositoryDAO.findAllByReceiverIdAndReceiverTypeAndRedFlag(receiverUserEntity.getId(), new Long(5), new Long(0));
 
-        return ResponseEntity.ok(alertsContactMessages);
+        // reduce the set to unique usernames.
+        Set<String> userNewMessagesSet = new HashSet<>();
+        for (MessagesEntity x : alertsContactMessages) {
+            userNewMessagesSet.add(x.getSender().getUserName());
+        }
+
+        return ResponseEntity.ok(userNewMessagesSet);
     }
 
     // POST a new message. Two friends/contacts.
@@ -265,5 +284,34 @@ public class MessagesController extends AbstractRestController {
         return ResponseEntity.ok(savedMessagesEntityDto);
     }
 
+    // GET clear unread messages flag (contacts, club members, guild members).
+    @ApiOperation(value = "getIndividualMessagesEntity")
+    @RequestMapping(value = "/j{uId}{type}", method = RequestMethod.GET)
+    public ResponseEntity<String> clearUnreadMsgs(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("uId") final String friendsName,
+            @RequestParam("type") final Long type) {
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        UserEntity userEntity = userRepositoryDAO.findOneByUserName(user);
+        UserEntity friendsUserEntity = userRepositoryDAO.findOneByUserName(friendsName);
+
+        // TODO validation: check that friend is indeed in user's friends list or clubs list etc.
+
+        Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(friendsUserEntity, userEntity.getId(), type);
+        for (MessagesEntity x : newReceivedMessages) {
+            if (x.getRedFlag().equals(new Long(0))) {
+                x.setRedFlag(new Long(1));
+                messagesRepositoryDAO.save(x);}
+        }
+
+        String success = "alert cleared";
+        return ResponseEntity.ok(success);
+    }
 
 }

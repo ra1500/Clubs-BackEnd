@@ -31,20 +31,24 @@ public class MessagesEntity implements Serializable {
     private Long receiverType;    // 1=IndividualUserFromClub 2=Club 3=Guild 4=IndividualUserFromContact 5=IndividualUserFromGuild
 
     @Column
-    private Long receiverId;
+    private Long receiverId; // userId if from individual. clubId if from club message board.
+
+    @Column
+    private String clubName;
 
     @Column
     private Long redFlag = new Long(0);  // was message read by receiver. 0=no 1=yes.
 
     public MessagesEntity() { super(); }
 
-    public MessagesEntity(Long id, Date created, String message, UserEntity sender, Long receiverType, Long receiverId, Long redFlag) {
+    public MessagesEntity(Long id, Date created, String message, UserEntity sender, Long receiverType, Long receiverId, String clubName, Long redFlag) {
         this.id = id;
         this.created = created;
         this.message = message;
         this.sender = sender;
         this.receiverType = receiverType;
         this.receiverId = receiverId;
+        this.clubName = clubName;
         this.redFlag = redFlag;
     }
 
@@ -95,6 +99,10 @@ public class MessagesEntity implements Serializable {
     public void setReceiverId(Long receiverId) {
         this.receiverId = receiverId;
     }
+
+    public String getClubName() {return clubName;}
+
+    public void setClubName(String clubName) {this.clubName = clubName;}
 
     public Long getRedFlag() {
         return redFlag;

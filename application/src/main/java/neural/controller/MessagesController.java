@@ -160,7 +160,7 @@ public class MessagesController extends AbstractRestController {
         return ResponseEntity.ok(twoUsersMessages);
     }
 
-    // GET list of contacts with messages not yet read.
+    // GET Alerts. list of contacts with messages not yet read.
     @ApiOperation(value = "getAlertsContactsMessagesEntity")
     @RequestMapping(value = "/f", method = RequestMethod.GET)
     public ResponseEntity<Set<String>> getAlertsContactMessages(
@@ -185,10 +185,10 @@ public class MessagesController extends AbstractRestController {
         return ResponseEntity.ok(userNewMessagesSet);
     }
 
-    // GET list of club members with messages not yet read.
+    // GET Alerts. list of club members with messages not yet read.
     @ApiOperation(value = "getAlertsClubsMessagesEntity")
     @RequestMapping(value = "/g", method = RequestMethod.GET)
-    public ResponseEntity<Set<String>> getAlertsClubsMessages(
+    public ResponseEntity<Set<MessagesEntity>> getAlertsClubsMessages(
             @RequestHeader("Authorization") String token ) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -199,21 +199,15 @@ public class MessagesController extends AbstractRestController {
 
         UserEntity receiverUserEntity = userRepositoryDAO.findOneByUserName(user);
 
-        Set<MessagesEntity> alertsContactMessages = messagesRepositoryDAO.findAllByReceiverIdAndReceiverTypeAndRedFlag(receiverUserEntity.getId(), new Long(1), new Long(0));
+        Set<MessagesEntity> alertsClubMessages = messagesRepositoryDAO.getAlertsNewCLubMessages(receiverUserEntity.getId());
 
-        // reduce the set to unique usernames.
-        Set<String> userNewMessagesSet = new HashSet<>();
-        for (MessagesEntity x : alertsContactMessages) {
-            userNewMessagesSet.add(x.getSender().getUserName());
-        }
-
-        return ResponseEntity.ok(userNewMessagesSet);
+        return ResponseEntity.ok(alertsClubMessages);
     }
 
-    // GET list of guild members with messages not yet read.
+    // GET Alerts. list of guild members with messages not yet read.
     @ApiOperation(value = "getAlertsGuildMessagesEntity")
     @RequestMapping(value = "/h", method = RequestMethod.GET)
-    public ResponseEntity<Set<String>> getAlertsGuildMessages(
+    public ResponseEntity<Set<MessagesEntity>> getAlertsGuildMessages(
             @RequestHeader("Authorization") String token ) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -224,15 +218,9 @@ public class MessagesController extends AbstractRestController {
 
         UserEntity receiverUserEntity = userRepositoryDAO.findOneByUserName(user);
 
-        Set<MessagesEntity> alertsContactMessages = messagesRepositoryDAO.findAllByReceiverIdAndReceiverTypeAndRedFlag(receiverUserEntity.getId(), new Long(5), new Long(0));
+        Set<MessagesEntity> alertsClubMessages = messagesRepositoryDAO.getAlertsNewGuildMessages(receiverUserEntity.getId());
 
-        // reduce the set to unique usernames.
-        Set<String> userNewMessagesSet = new HashSet<>();
-        for (MessagesEntity x : alertsContactMessages) {
-            userNewMessagesSet.add(x.getSender().getUserName());
-        }
-
-        return ResponseEntity.ok(userNewMessagesSet);
+        return ResponseEntity.ok(alertsClubMessages);
     }
 
     // POST a new message. Two friends/contacts.
@@ -284,12 +272,42 @@ public class MessagesController extends AbstractRestController {
         return ResponseEntity.ok(savedMessagesEntityDto);
     }
 
-    // GET clear unread messages flag (contacts, club members, guild members).
+    // GET clears unread messages flag from network contacts.
     @ApiOperation(value = "getIndividualMessagesEntity")
-    @RequestMapping(value = "/j{uId}{type}", method = RequestMethod.GET)
+    @RequestMapping(value = "/j{uId}", method = RequestMethod.GET)
     public ResponseEntity<String> clearUnreadMsgs(
             @RequestHeader("Authorization") String token,
+            @RequestParam("uId") final String friendsName) {
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        UserEntity userEntity = userRepositoryDAO.findOneByUserName(user);
+        UserEntity friendsUserEntity = userRepositoryDAO.findOneByUserName(friendsName);
+
+        // TODO validation: check that friend is indeed in user's friends list or clubs list etc.
+
+        Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(friendsUserEntity, userEntity.getId(), new Long(4));
+        for (MessagesEntity x : newReceivedMessages) {
+            if (x.getRedFlag().equals(new Long(0))) {
+                x.setRedFlag(new Long(1));
+                messagesRepositoryDAO.save(x);}
+        }
+
+        String success = "alert cleared";
+        return ResponseEntity.ok(success);
+    }
+
+    // GET clears unread messages flag from club members and guild members.
+    @ApiOperation(value = "getIndividualMessagesEntity")
+    @RequestMapping(value = "/k{uId}{type}", method = RequestMethod.GET)
+    public ResponseEntity<String> clearUnreadMsgsClubs(
+            @RequestHeader("Authorization") String token,
             @RequestParam("uId") final String friendsName,
+            @RequestParam("cN") final String clubName,
             @RequestParam("type") final Long type) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -303,7 +321,7 @@ public class MessagesController extends AbstractRestController {
 
         // TODO validation: check that friend is indeed in user's friends list or clubs list etc.
 
-        Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(friendsUserEntity, userEntity.getId(), type);
+        Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverTypeAndClubName(friendsUserEntity, userEntity.getId(), type, clubName);
         for (MessagesEntity x : newReceivedMessages) {
             if (x.getRedFlag().equals(new Long(0))) {
                 x.setRedFlag(new Long(1));

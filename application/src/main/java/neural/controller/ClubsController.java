@@ -41,6 +41,8 @@ public class ClubsController extends AbstractRestController {
         String user = values[0];
 
         ClubsEntityDto clubsEntityDto = clubsEntityService.getClubsEntity(clubsEntityId );
+        clubsEntityDto.getMembers().removeIf(i -> i.getUserName().equals(user));
+
         if (clubsEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
 
         return ResponseEntity.ok(clubsEntityDto);

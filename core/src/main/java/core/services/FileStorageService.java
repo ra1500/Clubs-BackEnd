@@ -1,8 +1,10 @@
 package core.services;
 
 import core.config.FileStorageProperties;
+import db.entity.ClubsEntity;
 import db.entity.FriendshipsEntity;
 import db.entity.UserEntity;
+import db.repository.ClubsRepositoryDAO;
 import db.repository.FriendshipsRepositoryDAO;
 import db.repository.UserRepositoryDAO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +29,14 @@ public class FileStorageService {
     private final Path fileStorageLocation;
     private FriendshipsRepositoryDAO friendshipsRepositoryDAO;
     private UserRepositoryDAO userRepositoryDAO;
+    private ClubsRepositoryDAO clubsRepositoryDAO;
 
     @Autowired
     public FileStorageService(FileStorageProperties fileStorageProperties, FriendshipsRepositoryDAO friendshipsRepositoryDAO,
-                              UserRepositoryDAO userRepositoryDAO) {
+                              UserRepositoryDAO userRepositoryDAO, ClubsRepositoryDAO clubsRepositoryDAO) {
         this.friendshipsRepositoryDAO = friendshipsRepositoryDAO;
         this.userRepositoryDAO = userRepositoryDAO;
+        this.clubsRepositoryDAO = clubsRepositoryDAO;
         this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize();
 
         try {
@@ -172,4 +176,40 @@ public class FileStorageService {
             throw new MyFileNotFoundException("File not found ", ex);
         }
     }
+
+    // Get a friend's profile image
+    public Resource getClubMemberImage(String user, Long clubId ,Long memberId) {
+
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
+        UserEntity foundMemberUserEntity = userRepositoryDAO.findOneById(memberId);
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
+        Set<UserEntity> clubMembers = foundClubsEntity.getMembers();
+
+        String defaultImage = "profiledefault.jpg";
+        Path defaultFilePath = this.fileStorageLocation.resolve(defaultImage).normalize();
+        try {
+            Resource defaultResource = new UrlResource(defaultFilePath.toUri());
+            if ( !clubMembers.contains(foundUserEntity) ) { return defaultResource; } // validation: is user in club?
+            if ( !clubMembers.contains(foundMemberUserEntity) ) { return defaultResource; } // validation: is member also in club?
+
+            String imageSelected = foundMemberUserEntity.getUserName() + "1.jpg";
+
+            Path filePath = this.fileStorageLocation.resolve(imageSelected).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            String defaultImage2 = "profiledefault.jpg";
+            Path defaultFilePath2 = this.fileStorageLocation.resolve(defaultImage2).normalize();
+            Resource defaultResource2 = new UrlResource(defaultFilePath2.toUri());
+
+            if(resource.exists()) {return resource;
+            } else if(defaultResource2.exists()) { return defaultResource2; }
+            else {throw new MyFileNotFoundException("File not found ");
+            }
+
+        } catch (MalformedURLException ex) {
+            throw new MyFileNotFoundException("File not found ", ex);
+        }
+    }
+
+
 }

@@ -152,7 +152,6 @@ public class FileController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
-
     }
 
     // GET image of a contact's contact.
@@ -187,11 +186,37 @@ public class FileController {
 
     }
 
-   // UserEntity foundUserEntity = userEntityRepository.findOneByUserName(userName);
-   //     if (foundUserEntity == null) { return new ResponseEntity<>(null); }
+    // GET image of single club member
+    @RequestMapping(value = "/k", method = RequestMethod.GET)
+    public ResponseEntity<Resource> downloadClubMemberImage(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("mId") final Long memberId,
+            @RequestParam("cId") final Long clubId,
+            HttpServletRequest request) {
 
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
 
-   //     Resource resource = fileStorageService.loadFileAsResource(publicProfileImage);
+        Resource resource = fileStorageService.getClubMemberImage(user, clubId, memberId);
+
+        // Try to determine file's content type
+        String contentType = null;
+        try {contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+        }
+
+        // Fallback to the default content type if type could not be determined
+        if(contentType == null) {contentType = "application/octet-stream";}
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
 
     // GET profile image Public Profile.
     @RequestMapping(value = "/pp{id}", method = RequestMethod.GET)

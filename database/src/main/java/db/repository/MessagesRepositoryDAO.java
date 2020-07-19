@@ -23,7 +23,15 @@ public interface MessagesRepositoryDAO extends JpaRepository<MessagesEntity, Lon
 
     Set<MessagesEntity> findAllBySenderAndReceiverIdAndReceiverType(UserEntity sender, Long receiverId, Long receiverType);
 
+    Set<MessagesEntity> findAllBySenderAndReceiverIdAndReceiverTypeAndClubName(UserEntity sender, Long receiverId, Long receiverType, String clubName);
+
     Set<MessagesEntity> findAllByReceiverIdAndReceiverTypeAndRedFlag(Long receiverId, Long receiverType, Long redFlag);
+
+    @Query("SELECT DISTINCT m.clubName, m.sender.userName FROM MessagesEntity m WHERE m.receiverId = :receiverId AND m.redFlag = 0 AND m.receiverType = 1")
+    Set<MessagesEntity> getAlertsNewCLubMessages(@Param("receiverId") Long receiverId);
+
+    @Query("SELECT DISTINCT m.clubName, m.sender.userName FROM MessagesEntity m WHERE m.receiverId = :receiverId AND m.redFlag = 0 AND m.receiverType = 5")
+    Set<MessagesEntity> getAlertsNewGuildMessages(@Param("receiverId") Long receiverId);
 
     @Transactional
     Integer deleteOneById(Long id);

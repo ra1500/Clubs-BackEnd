@@ -28,6 +28,9 @@ public class MessagesEntityDto implements Serializable {
     @JsonProperty("receiverId")
     private Long receiverId;
 
+    @JsonProperty("clubName")
+    private String clubName;
+
     @JsonProperty("redFlag")
     private Long redFlag;
 
@@ -79,6 +82,10 @@ public class MessagesEntityDto implements Serializable {
     public void setReceiverId(Long receiverId) {
         this.receiverId = receiverId;
     }
+
+    public String getClubName() {return clubName;}
+
+    public void setClubName(String clubName) {this.clubName = clubName;}
 
     public Long getRedFlag() {return redFlag;}
 

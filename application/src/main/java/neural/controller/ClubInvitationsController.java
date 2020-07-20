@@ -61,6 +61,10 @@ public class ClubInvitationsController extends AbstractRestController {
 
         ClubInvitationsEntityDto foundNewClubInvitations = clubInvitationsEntityService.getClubInvitationsEntity(clubInvitationEntityId);
         foundNewClubInvitations.getClub().setMembers(null);
+        foundNewClubInvitations.getSender().setPassword(null);
+        foundNewClubInvitations.getSender().setContactInfo(null);
+        foundNewClubInvitations.getSender().setPublicProfile(null);
+        foundNewClubInvitations.getSender().setContactInfo(null);
 
         return ResponseEntity.ok(foundNewClubInvitations);
     }
@@ -81,6 +85,10 @@ public class ClubInvitationsController extends AbstractRestController {
         String user = values[0];
 
         ClubInvitationsEntityDto savedClubInvitationsEntityDto = clubInvitationsEntityService.createClubInvitationsEntity(clubInvitationsEntityDto, user, clubId);
+
+        savedClubInvitationsEntityDto.setSender(null);
+        savedClubInvitationsEntityDto.setClub(null);
+
         return ResponseEntity.ok(savedClubInvitationsEntityDto);
     }
 

@@ -60,6 +60,11 @@ public class VotesEntityController extends AbstractRestController {
         if (userClubVotesSet.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
+
+        for (VotesEntity x : userClubVotesSet) {
+            x.setVoter(null);
+        }
+
         return ResponseEntity.ok(userClubVotesSet);
     }
 
@@ -79,6 +84,9 @@ public class VotesEntityController extends AbstractRestController {
         String user = values[0];
 
         VotesEntityDto savedVotesEntityDto = votesEntityService.createVotesEntity(votesEntityDto, user, clubId);
+
+        savedVotesEntityDto.setVoter(null);
+
         return ResponseEntity.ok(savedVotesEntityDto);
     }
 

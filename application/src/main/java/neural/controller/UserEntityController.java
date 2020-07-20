@@ -204,6 +204,14 @@ public class UserEntityController extends AbstractRestController {
 
         UserEntityDto userEntityDto = userEntityService.getUserEntityRecentFriends(user);
         userEntityDto.setPassword(null);
+        userEntityDto.setClubsSet(null);
+        userEntityDto.setTitle(null);
+        userEntityDto.setBlurb(null);
+        userEntityDto.setLocation(null);
+        userEntityDto.setPublicProfile(null);
+
+
+
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         return ResponseEntity.ok(userEntityDto);
     }
@@ -289,6 +297,13 @@ public class UserEntityController extends AbstractRestController {
             userEntityDto.setEducation(new Long(5));
             userEntityDto.setRelationshipStatus(new Long(3));
             UserEntityDto savedUserEntityDto = userEntityService.createUserEntity(userEntityDto);
+
+            savedUserEntityDto.setId(null);
+            savedUserEntityDto.setCreated(null);
+            savedUserEntityDto.setPublicProfile(null);
+            savedUserEntityDto.setFriendsSet(null);
+            savedUserEntityDto.setClubsSet(null);
+
         return ResponseEntity.ok(savedUserEntityDto);
     }
 
@@ -328,6 +343,8 @@ public class UserEntityController extends AbstractRestController {
 
         UserEntityDto verifiedUserEntityDto = userEntityService.getUserEntity(userEntityDto.getUserName(),userEntityDto.getPassword());
         verifiedUserEntityDto.setFriendsSet(null);
+        verifiedUserEntityDto.setClubsSet(null);
+        verifiedUserEntityDto.setTitle(null);
         verifiedUserEntityDto.setPublicProfile(null);
         verifiedUserEntityDto.setId(null);
         verifiedUserEntityDto.setCreated(null);

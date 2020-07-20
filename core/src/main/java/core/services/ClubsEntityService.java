@@ -39,7 +39,7 @@ public class ClubsEntityService {
         Set<UserEntity> members = foundClubsEntity.getMembers();
         for (UserEntity u : members) {
             u.setPassword(null);
-            u.setCreated(null);
+            u.setCreated(null); u.setLocation(null); u.setContactInfo(null);
         }
         foundClubsEntity.setMembers(members);
 
@@ -84,6 +84,9 @@ public class ClubsEntityService {
         // no change in alpha. should be based on max votes, or oldest create date of membership.
 
         clubsRepositoryDAO.save(foundClubsEntity);
+
+        foundClubsEntity.setMembers(null);
+        foundClubsEntity.setVotes(null); // set to null for now. but might want this later to count alpha votes.
 
         return clubsEntityDtoTransformer.generate(foundClubsEntity);
     }

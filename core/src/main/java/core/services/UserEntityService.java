@@ -166,7 +166,7 @@ public class UserEntityService {
             x.setInviter(null);
             x.setVisibilityPermission(null);}
 
-        // add title to each friend of friend using this 'clever' trick. TODO: use JPQL/SQL instead of this tecnique.
+        // add title to each friend of friend using this 'clever' trick. TODO: use JPQL/SQL instead of this technique.
         for (FriendshipsEntity x : foundUser.getFriendsSet() ) {
             x.setUserEntity(userEntityRepository.findOneByUserName(x.getFriend()));
             x.getUserEntity().setFriendsSet(null);

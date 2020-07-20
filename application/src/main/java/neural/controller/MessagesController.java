@@ -77,6 +77,14 @@ public class MessagesController extends AbstractRestController {
         // for loop to clean Set data
         // if empty return empty set.
 
+        // reduce data and don't share passowrds etc.
+        for (MessagesEntity y : clubMessages) {
+            y.getSender().setPassword(null); y.getSender().setContactInfo(null); y.getSender().setPublicProfile(null);
+            y.getSender().setCreated(null); y.getSender().setRelationshipStatus(null); y.getSender().setOccupation(null);
+            y.getSender().setBlurb(null); y.getSender().setLocation(null); y.getSender().setTitle(null);
+            y.getSender().setEducation(null);
+        }
+
         return ResponseEntity.ok(clubMessages);
     }
 
@@ -152,6 +160,13 @@ public class MessagesController extends AbstractRestController {
 
         twoUsersMessages.addAll(newReceivedMessages);
 
+        // reduce data and don't share passowrds etc.
+        for (MessagesEntity y : twoUsersMessages) {
+            y.getSender().setPassword(null); y.getSender().setContactInfo(null); y.getSender().setPublicProfile(null);
+            y.getSender().setCreated(null); y.getSender().setRelationshipStatus(null); y.getSender().setOccupation(null);
+            y.getSender().setBlurb(null); y.getSender().setLocation(null); y.getSender().setTitle(null);
+            y.getSender().setEducation(null);
+        }
 
         // TODO check that user is in club (validation)
         // for loop to clean Set data
@@ -246,6 +261,8 @@ public class MessagesController extends AbstractRestController {
         messagesEntityDto.setReceiverId(friendsUserEntity.getId());
         MessagesEntityDto savedMessagesEntityDto = messagesEntityService.createMessagesEntity(messagesEntityDto, user);
 
+        savedMessagesEntityDto.setSender(null);
+
         return ResponseEntity.ok(savedMessagesEntityDto);
     }
 
@@ -268,6 +285,13 @@ public class MessagesController extends AbstractRestController {
         // TODO validations
 
         MessagesEntityDto savedMessagesEntityDto = messagesEntityService.createMessagesEntity(messagesEntityDto, user);
+
+        // reduce data and don't share passowrds etc.
+        savedMessagesEntityDto.getSender().setPassword(null); savedMessagesEntityDto.getSender().setContactInfo(null); savedMessagesEntityDto.getSender().setPublicProfile(null);
+        savedMessagesEntityDto.getSender().setCreated(null); savedMessagesEntityDto.getSender().setRelationshipStatus(null); savedMessagesEntityDto.getSender().setOccupation(null);
+        savedMessagesEntityDto.getSender().setBlurb(null); savedMessagesEntityDto.getSender().setLocation(null); savedMessagesEntityDto.getSender().setTitle(null);
+        savedMessagesEntityDto.getSender().setEducation(null);
+
 
         return ResponseEntity.ok(savedMessagesEntityDto);
     }

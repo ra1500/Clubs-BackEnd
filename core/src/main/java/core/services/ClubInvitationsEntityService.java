@@ -45,6 +45,11 @@ public class ClubInvitationsEntityService {
     public Set<ClubInvitationsEntity> getNewClubInvitations(final String user) {
         Set<ClubInvitationsEntity> foundNewClubInvitations = clubInvitationsRepositoryDAO.findAllByReceiverAndStatus(user, new Long(1));
 
+        for (ClubInvitationsEntity x : foundNewClubInvitations ) {
+            x.getSender().setPassword(null); x.getSender().setCreated(null); x.getSender().setClubs(null);
+            x.getSender().setFriendsSet(null); x.getSender().setContactInfo(null);
+        }
+
         return foundNewClubInvitations;
     }
 
@@ -73,7 +78,7 @@ public class ClubInvitationsEntityService {
         return clubInvitationsEntityDtoTransformer.generate(newClubInvitationsEntity);
     }
 
-    // POST an updated invitation (accepted or decline). TODO if quit a club, make sure the invitation is also deleted.
+    // POST an updated invitation (accepted or decline).
     public ClubInvitationsEntityDto updateClubInvitationsEntity(final ClubInvitationsEntityDto clubInvitationsEntityDto, final String userName) {
 
         // get the invitation
@@ -86,9 +91,9 @@ public class ClubInvitationsEntityService {
         foundClubInvitationEntity.setStatus(clubInvitationsEntityDto.getStatus());
 
         // add the user to the club if accepted. save it. also add club to the user
-        if (clubInvitationsEntityDto.getStatus() == 2) {
+        if (clubInvitationsEntityDto.getStatus().equals(new Long(2))) {
             UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
-            ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubInvitationsEntityDto.getId());
+            ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
             Set<UserEntity> members = foundClubsEntity.getMembers();
             members.add(foundUserEntity);
             foundClubsEntity.setMembers(members);
@@ -100,7 +105,6 @@ public class ClubInvitationsEntityService {
             newAlphaVote.setVoteType(new Long(1));
             newAlphaVote.setVoteCast(foundClubsEntity.getAlpha());
             votesRepositoryDAO.saveAndFlush(newAlphaVote);
-
 
             foundUserEntity.getClubs().add(foundClubsEntity);
             clubsRepositoryDAO.save(foundClubsEntity);
@@ -114,6 +118,10 @@ public class ClubInvitationsEntityService {
 
         // save the updated club invitation
         clubInvitationsRepositoryDAO.save(foundClubInvitationEntity);
+
+        // clean up the DTO by deleting excess info.
+        foundClubInvitationEntity.setSender(null);
+        foundClubInvitationEntity.setClub(null);
 
         return clubInvitationsEntityDtoTransformer.generate(foundClubInvitationEntity);
     }

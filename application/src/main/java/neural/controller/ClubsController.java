@@ -83,6 +83,8 @@ public class ClubsController extends AbstractRestController {
         String user = values[0];
 
         ClubsEntityDto savedClubsEntityDto = clubsEntityService.createClubsEntity(clubsEntityDto, user);
+        savedClubsEntityDto.setMembers(null);
+
         return ResponseEntity.ok(savedClubsEntityDto);
     }
 

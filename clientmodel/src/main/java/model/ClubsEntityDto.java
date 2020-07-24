@@ -22,6 +22,9 @@ public class ClubsEntityDto implements Serializable {
     @JsonProperty("clubName")
     private String clubName;
 
+    @JsonProperty("founder")
+    private String founder;
+
     @JsonProperty("description")
     private String description;
 
@@ -39,6 +42,12 @@ public class ClubsEntityDto implements Serializable {
 
     @JsonProperty("votes")
     private Set<VotesEntity> votes;
+
+    @JsonProperty("betaCount")
+    private Long betaCount;
+
+    @JsonProperty("betaMember")
+    private String betaMember;
 
     public ClubsEntityDto() {
     }
@@ -66,6 +75,10 @@ public class ClubsEntityDto implements Serializable {
     public void setClubName(String clubName) {
         this.clubName = clubName;
     }
+
+    public String getFounder() {return founder;}
+
+    public void setFounder(String founder) {this.founder = founder;}
 
     public String getDescription() {
         return description;
@@ -107,11 +120,17 @@ public class ClubsEntityDto implements Serializable {
         this.members = members;
     }
 
-    public Set<VotesEntity> getVotes() {
-        return votes;
-    }
+    public Set<VotesEntity> getVotes() {return votes;}
 
     public void setVotes(Set<VotesEntity> votes) {
         this.votes = votes;
     }
+
+    public Long getBetaCount() {return betaCount;}
+
+    public void setBetaCount(Long betaCount) {this.betaCount = betaCount;}
+
+    public String getBetaMember() {return betaMember;}
+
+    public void setBetaMember(String betaMember) {this.betaMember = betaMember;}
 }

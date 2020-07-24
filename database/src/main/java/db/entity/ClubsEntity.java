@@ -28,6 +28,9 @@ public class ClubsEntity implements Serializable {
     @Column (length = 100)
     private String clubName;
 
+    @Column
+    private String founder;
+
     @Column (length = 100)
     private String description;
 
@@ -50,34 +53,26 @@ public class ClubsEntity implements Serializable {
     @OneToMany(mappedBy = "club", fetch = FetchType.LAZY)
     private Set<VotesEntity> votes = new HashSet<>();
 
-    //@ManyToMany(fetch = FetchType.LAZY)
-    //@JoinColumn(name = "UserEntityId")
-    //@Column
-    //private Set<UserEntity> removedMembers;
-
-    //@JsonIgnore
-    //@OneToMany(mappedBy = "clubsEntity", fetch = FetchType.LAZY)
-    //@Column
-    //private List<ClubsEntity> bridges; // list of clubsEntity id's
-
     public ClubsEntity() {
         super();
     }
 
-    public ClubsEntity(Long id, Date created, String clubName, String description, Long maxSize, Long currentSize, String alpha) {
+    public ClubsEntity(Long id, Date created, String clubName, String founder, String description, Long maxSize, Long currentSize, String alpha) {
         this.id = id;
         this.created = created;
         this.clubName = clubName;
+        this.founder = founder;
         this.description = description;
         this.maxSize = maxSize;
         this.currentSize = currentSize;
         this.alpha = alpha;
     }
 
-    public ClubsEntity(Long id, Date created, String clubName, String description, Long maxSize, Long currentSize, String alpha, Set<UserEntity> members, Set<VotesEntity> votes) {
+    public ClubsEntity(Long id, Date created, String clubName, String founder, String description, Long maxSize, Long currentSize, String alpha, Set<UserEntity> members, Set<VotesEntity> votes) {
         this.id = id;
         this.created = created;
         this.clubName = clubName;
+        this.founder = founder;
         this.description = description;
         this.maxSize = maxSize;
         this.currentSize = currentSize;
@@ -105,6 +100,10 @@ public class ClubsEntity implements Serializable {
     public void setClubName(String clubName) {
         this.clubName = clubName;
     }
+
+    public String getFounder() {return founder;}
+
+    public void setFounder(String founder) {this.founder = founder;}
 
     public String getDescription() {
         return description;
@@ -156,7 +155,7 @@ public class ClubsEntity implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("clubs profile", id, created, clubName);
+        return String.format("clubs profile", id, created, founder,clubName);
     }
 
 }

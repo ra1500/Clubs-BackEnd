@@ -93,6 +93,13 @@ public class ClubInvitationsEntityService {
         // add the user to the club if accepted. save it. also add club to the user
         if (clubInvitationsEntityDto.getStatus().equals(new Long(2))) {
             UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
+
+            // first, check that user is under max.# of clubs can join
+            Integer countOfClubsJoined = foundUserEntity.getClubs().size();
+            if ( countOfClubsJoined > 30 ) {
+                clubInvitationsEntityDto.setReceiver("OVER LIMIT");
+                return clubInvitationsEntityDto; }
+
             ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
             Set<UserEntity> members = foundClubsEntity.getMembers();
             members.add(foundUserEntity);

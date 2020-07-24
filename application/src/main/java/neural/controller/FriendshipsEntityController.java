@@ -51,7 +51,7 @@ public class FriendshipsEntityController extends AbstractRestController {
             return ResponseEntity.ok(savedFriendshipsEntityDto);
     }
 
-    // POST a friendship (amend an existing)
+    // POST a friendship (amend an existing). Acceptance, ...
     @RequestMapping(value = "/a", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<FriendshipsEntityDto> amendFriendshipsEntity(
             @RequestHeader("Authorization") String token,

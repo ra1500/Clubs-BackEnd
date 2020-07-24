@@ -49,11 +49,20 @@ public class ClubsEntityService {
     // POST a new Club
     public ClubsEntityDto createClubsEntity(final ClubsEntityDto clubsEntityDto, final String userName) {
 
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
+
+        // first, check that user is under max.# of clubs can join
+        Integer countOfClubsJoined = foundUserEntity.getClubs().size();
+         if ( countOfClubsJoined > 30 ) {
+             clubsEntityDto.setFounder("OVER LIMIT");
+             return clubsEntityDto; }
+
         // a new club includes a set of members. Add it, with the user, to the Dto.
         Set<UserEntity> newMembersSet = new HashSet<>();
-        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
+
         newMembersSet.add(foundUserEntity);
         clubsEntityDto.setMembers(newMembersSet);
+        clubsEntityDto.setFounder(userName);
         ClubsEntity newClubsEntity = (clubsEntityDtoTransformer.generate(clubsEntityDto));
         ClubsEntity savedNewClubsEntity = clubsRepositoryDAO.saveAndFlush(newClubsEntity);
 

@@ -24,7 +24,7 @@ public class ClubInvitationsEntityDto implements Serializable {
     private String receiver;
 
     @JsonProperty("status")
-    private Long status; // pending, accepted, declined, blocked
+    private Long status; // 1pending, 2accepted, 3declined, 4blocked, 5 clubFull
 
     @JsonProperty("club")
     private ClubsEntity club;

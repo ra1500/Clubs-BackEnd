@@ -63,6 +63,15 @@ public class ClubsEntityService {
         newMembersSet.add(foundUserEntity);
         clubsEntityDto.setMembers(newMembersSet);
         clubsEntityDto.setFounder(userName);
+
+        if (clubsEntityDto.getMaxSize().equals(null)) { clubsEntityDto.setMaxSize(new Long(20)); };
+        try {
+            clubsEntityDto.setMaxSize(clubsEntityDto.getMaxSize());
+            if (clubsEntityDto.getMaxSize() > 500) { clubsEntityDto.setMaxSize(new Long(500)); };
+            if (clubsEntityDto.getMaxSize() < 1) { clubsEntityDto.setMaxSize(new Long(1)); };
+        }
+        catch (NumberFormatException nfe) { clubsEntityDto.setMaxSize(new Long(20)); };
+
         ClubsEntity newClubsEntity = (clubsEntityDtoTransformer.generate(clubsEntityDto));
         ClubsEntity savedNewClubsEntity = clubsRepositoryDAO.saveAndFlush(newClubsEntity);
 
@@ -87,8 +96,18 @@ public class ClubsEntityService {
 
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubsEntityDto.getId());
         foundClubsEntity.setClubName(clubsEntityDto.getClubName());
-        foundClubsEntity.setMaxSize(clubsEntityDto.getMaxSize());
+
         foundClubsEntity.setDescription(clubsEntityDto.getDescription());
+        if (clubsEntityDto.getMaxSize().equals(null)) { foundClubsEntity.setMaxSize(foundClubsEntity.getMaxSize()); };
+        if (foundClubsEntity.getMaxSize().equals(null)) { foundClubsEntity.setMaxSize(new Long(20)); };
+
+        try {
+        foundClubsEntity.setMaxSize(clubsEntityDto.getMaxSize());
+        if (clubsEntityDto.getMaxSize() > 500) { foundClubsEntity.setMaxSize(new Long(500)); };
+        if (clubsEntityDto.getMaxSize() < 1) { foundClubsEntity.setMaxSize(new Long(1)); };
+        }
+        catch (NumberFormatException nfe) { foundClubsEntity.setMaxSize(foundClubsEntity.getMaxSize()); };
+
 
         // no change in alpha. should be based on max votes, or oldest create date of membership.
 

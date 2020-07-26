@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
+import java.util.Date;
 import java.util.Set;
 
 @Repository
@@ -22,6 +23,9 @@ public interface MessagesRepositoryDAO extends JpaRepository<MessagesEntity, Lon
     //Set<MessagesEntity> getTwoUsersMessages(@Param("sender") UserEntity sender, @Param("receiverId") Long receiverId);
 
     Set<MessagesEntity> findAllBySenderAndReceiverIdAndReceiverType(UserEntity sender, Long receiverId, Long receiverType);
+
+    @Query("SELECT m FROM MessagesEntity m WHERE m.sender = :sender AND m.receiverId = :receiverId AND m.created > :yesterday ")
+    Set<MessagesEntity> getAllWithinOneDay(UserEntity sender, Long receiverId, Date yesterday);
 
     Set<MessagesEntity> findAllBySenderAndReceiverIdAndReceiverTypeAndClubName(UserEntity sender, Long receiverId, Long receiverType, String clubName);
 

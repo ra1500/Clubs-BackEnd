@@ -1,6 +1,7 @@
 package core.transformers;
 
 import db.entity.ClubsEntity;
+import db.entity.UserEntity;
 import db.entity.VotesEntity;
 import db.repository.VotesRepositoryDAO;
 import model.ClubsEntityDto;
@@ -25,19 +26,16 @@ public class ClubsEntityDtoTransformer {
             return null;
         }
 
-        // get Beta count and Beta username
-        HashMap votes = votesRepositoryDAO.getAlphaVoteCounts(clubsEntity.getId());
-        String betaUsername = votes.
-
-
         ClubsEntityDto dto = new ClubsEntityDto();
+
         dto.setId(clubsEntity.getId());
         dto.setCreated(clubsEntity.getCreated());
         dto.setClubName(clubsEntity.getClubName());
         dto.setFounder(clubsEntity.getFounder());
         dto.setDescription(clubsEntity.getDescription());
         dto.setMaxSize(clubsEntity.getMaxSize());
-        dto.setCurrentSize( new Long(clubsEntity.getMembers().size()) );
+        if ( clubsEntity.getMaxSize().equals(null) ) { dto.setCurrentSize(new Long(20)); }
+        else { dto.setCurrentSize( clubsEntity.getCurrentSize()); };
         dto.setAlpha(clubsEntity.getAlpha());
         dto.setMembers(clubsEntity.getMembers());
         dto.setVotes(clubsEntity.getVotes());

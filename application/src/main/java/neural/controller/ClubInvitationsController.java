@@ -41,6 +41,8 @@ public class ClubInvitationsController extends AbstractRestController {
 
         Set<ClubInvitationsEntity> foundNewClubInvitations = clubInvitationsEntityService.getNewClubInvitations(user);
 
+        // validation. none needed here or in service. authenticated by 'user'.
+
         if (foundNewClubInvitations.isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         return ResponseEntity.ok(foundNewClubInvitations);
     }
@@ -59,7 +61,10 @@ public class ClubInvitationsController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        ClubInvitationsEntityDto foundNewClubInvitations = clubInvitationsEntityService.getClubInvitationsEntity(clubInvitationEntityId);
+        ClubInvitationsEntityDto foundNewClubInvitations = clubInvitationsEntityService.getClubInvitationsEntity(clubInvitationEntityId, user);
+
+        // validation. ensure club invitation belongs to user since this is based just on clubInviationEntityId. see service for implementation.
+
         foundNewClubInvitations.getClub().setMembers(null);
         foundNewClubInvitations.getSender().setPassword(null);
         foundNewClubInvitations.getSender().setContactInfo(null);
@@ -83,6 +88,8 @@ public class ClubInvitationsController extends AbstractRestController {
         // credentials = username:password
         final String[] values = credentials.split(":", 2);
         String user = values[0];
+
+        // validation. see implementation in service.
 
         ClubInvitationsEntityDto savedClubInvitationsEntityDto = clubInvitationsEntityService.createClubInvitationsEntity(clubInvitationsEntityDto, user, clubId);
 

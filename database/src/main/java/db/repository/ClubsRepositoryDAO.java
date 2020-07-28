@@ -14,6 +14,8 @@ public interface ClubsRepositoryDAO extends JpaRepository<ClubsEntity, Long> {
 
     ClubsEntity findOneById(Long id);
 
+    ClubsEntity findOneByClubName(String clubName);
+
     @Transactional
     Integer deleteOneById(Long id);
 }

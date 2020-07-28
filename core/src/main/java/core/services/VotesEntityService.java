@@ -10,6 +10,8 @@ import db.repository.VotesRepositoryDAO;
 import model.VotesEntityDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,11 +39,18 @@ public class VotesEntityService {
     // POST a alpha vote vote
     public VotesEntityDto createVotesEntity(final VotesEntityDto votesEntityDto, String userName, Long clubId) {
 
-        // TODO validate that user is indeed in this club.
-        // TODO validate that proposed alpha exists AND is in the club.
-
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
+
+        // validation. user is indeed in club.
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) )  { votesEntityDto.setVoteCast("error"); return votesEntityDto;};
+
+        // validation. does proposed alpha user exist?
+        UserEntity foundAlphaUserEntity = userRepositoryDAO.findOneByUserName(votesEntityDto.getVoteCast());
+        if ( foundAlphaUserEntity == null ) { votesEntityDto.setVoteCast("error. alpha user not found"); return votesEntityDto;};
+
+        // validation. is proposed alpha in club?
+        if ( !foundClubsEntity.getMembers().contains(foundAlphaUserEntity) ) { votesEntityDto.setVoteCast("error. alpha not in club"); return votesEntityDto;};
 
         // check if vote already exists. if it does, just update it.
         VotesEntity foundVotesEntity = votesRepositoryDAO.findOneByVoterAndVoteTypeAndClub(foundUserEntity, new Long(1), foundClubsEntity);

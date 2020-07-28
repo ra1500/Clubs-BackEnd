@@ -28,4 +28,7 @@ public interface VotesRepositoryDAO extends JpaRepository<VotesEntity, Long> {
 
     @Transactional
     Integer deleteOneById(Long id);
+
+    @Transactional
+    Integer deleteAllByVoter(Long id);
 }

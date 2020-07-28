@@ -26,7 +26,7 @@ public class ClubsController extends AbstractRestController {
         this.clubsEntityService = clubsEntityService;
     }
 
-    // GET
+    // GET a club (get it's info/details and members list sans this user).
     @ApiOperation(value = "getClubsEntity")
     @RequestMapping(value = "/a{cId}", method = RequestMethod.GET)
     public ResponseEntity<ClubsEntityDto> getClubsEntity(
@@ -40,7 +40,10 @@ public class ClubsController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        ClubsEntityDto clubsEntityDto = clubsEntityService.getClubsEntity(clubsEntityId );
+        ClubsEntityDto clubsEntityDto = clubsEntityService.getClubsEntity(clubsEntityId, user );
+
+        // validation. ensure user is in club before providing details. see implementation in service.
+
         clubsEntityDto.getMembers().removeIf(i -> i.getUserName().equals(user));
 
         if (clubsEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
@@ -60,6 +63,8 @@ public class ClubsController extends AbstractRestController {
         // credentials = username:password
         final String[] values = credentials.split(":", 2);
         String user = values[0];
+
+        // validation. in service.
 
         clubsEntityService.userQuitClub(user, clubId);
 
@@ -81,6 +86,8 @@ public class ClubsController extends AbstractRestController {
         // credentials = username:password
         final String[] values = credentials.split(":", 2);
         String user = values[0];
+
+        // validation. in service.
 
         ClubsEntityDto savedClubsEntityDto = clubsEntityService.createClubsEntity(clubsEntityDto, user);
         savedClubsEntityDto.setMembers(null);
@@ -104,6 +111,8 @@ public class ClubsController extends AbstractRestController {
         // credentials = username:password
         final String[] values = credentials.split(":", 2);
         String user = values[0];
+
+        // validation. in service.
 
         ClubsEntityDto savedClubsEntityDto = clubsEntityService.updateClubsEntity(clubsEntityDto, user);
         return ResponseEntity.ok(savedClubsEntityDto);

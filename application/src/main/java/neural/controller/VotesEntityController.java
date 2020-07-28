@@ -60,6 +60,9 @@ public class VotesEntityController extends AbstractRestController {
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubsEntityId);
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
 
+        // validation. user is indeed in club
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) )  { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+
         Set<VotesEntity> userClubVotesSet = votesRepositoryDAO.findAllByVoterAndClub(foundUserEntity, foundClubsEntity);
 
         if (userClubVotesSet.isEmpty()) {

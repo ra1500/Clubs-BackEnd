@@ -3,6 +3,7 @@ package core.services;
 import core.transformers.ClubsEntityDtoTransformer;
 import db.entity.ClubsEntity;
 import db.entity.UserEntity;
+import db.entity.VoteCountsClubAlpha;
 import db.entity.VotesEntity;
 import db.repository.ClubsRepositoryDAO;
 import db.repository.UserRepositoryDAO;
@@ -10,6 +11,7 @@ import db.repository.VotesRepositoryDAO;
 import model.ClubsEntityDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -33,9 +35,14 @@ public class ClubsEntityService {
     }
 
     // GET
-    public ClubsEntityDto getClubsEntity(final Long clubsEntityId) {
+    public ClubsEntityDto getClubsEntity(final Long clubsEntityId, String user) {
 
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubsEntityId);
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
+
+        // validation. ensure user is in club before providing details and members list.
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return new ClubsEntityDto(); };
+
         Set<UserEntity> members = foundClubsEntity.getMembers();
         for (UserEntity u : members) {
             u.setPassword(null);
@@ -92,11 +99,14 @@ public class ClubsEntityService {
     }
 
     // POST edit/update a club (alpha can update).
-    public ClubsEntityDto updateClubsEntity(final ClubsEntityDto clubsEntityDto, final String userName) {
+    public ClubsEntityDto updateClubsEntity(final ClubsEntityDto clubsEntityDto, final String user) {
 
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubsEntityDto.getId());
-        foundClubsEntity.setClubName(clubsEntityDto.getClubName());
 
+        // validation. user is alpha and can therefore update/edit the club.
+        if ( !foundClubsEntity.getAlpha().equals(user) ) { clubsEntityDto.setAlpha("error. user is not alpha"); return clubsEntityDto; }
+
+        foundClubsEntity.setClubName(clubsEntityDto.getClubName());
         foundClubsEntity.setDescription(clubsEntityDto.getDescription());
         if (clubsEntityDto.getMaxSize().equals(null)) { foundClubsEntity.setMaxSize(foundClubsEntity.getMaxSize()); };
         if (foundClubsEntity.getMaxSize().equals(null)) { foundClubsEntity.setMaxSize(new Long(20)); };
@@ -123,10 +133,12 @@ public class ClubsEntityService {
     public String userQuitClub(final String userName, final Long clubId) {
 
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
-
-        // TODO validate
-        // remove user from the club
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
+
+        // validation. ensure user is indeed in club.
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return "error. user is not in club"; };
+
+        // remove user from the club
         Set<UserEntity> foundUserEntitySet = foundClubsEntity.getMembers();
         foundUserEntitySet.removeIf(i -> i.getUserName().equals(userName));
         foundClubsEntity.setMembers(foundUserEntitySet);
@@ -136,12 +148,46 @@ public class ClubsEntityService {
         foundUserClubSet.removeIf(i -> i.getId().equals(clubId));
         foundUserEntity.setClubs(foundUserClubSet);
 
-        // remove the user's votes from the club.
-        //TODO
-        // TODO recalibrate vote counts and results
+        // delete all votes by user in club
+        votesRepositoryDAO.deleteAllByVoter(foundUserEntity.getId());
 
-        userRepositoryDAO.saveAndFlush(foundUserEntity);
-        clubsRepositoryDAO.saveAndFlush(foundClubsEntity);
+        // update the club's currentSize
+        foundClubsEntity.setCurrentSize(foundClubsEntity.getCurrentSize() - 1);
+
+        // update the club's alpha to the beta
+        if ( foundClubsEntity.getMembers().size() > 1 ) {
+            String[] voteCountsClubAlphas = votesRepositoryDAO.getAlphaVoteCounts(clubId);
+            Set<VoteCountsClubAlpha>  setOfVotes = new HashSet<>();
+
+            for (String x : voteCountsClubAlphas) {
+                String[] y = x.split(",");
+                setOfVotes.add(new VoteCountsClubAlpha( y[0], new Integer(y[1]) ));
+            }
+
+            // remove the alpha before getting the beta.
+            setOfVotes.removeIf(i -> i.getVoteCast().equals(foundClubsEntity.getAlpha()));
+
+            // get the beta. note if there is a tie in beta counts, this will just grab one from 'random' order in the Set.
+            // maxCount must be > than 1 in order overcome the alpha
+            int maxCount = 0;
+            int currentCount;
+            String beta = "";
+            for (VoteCountsClubAlpha x : setOfVotes ) {
+                currentCount = x.getCountVotesCast();
+                if (currentCount > maxCount) {
+                    maxCount = currentCount;
+                    beta = x.getVoteCast();
+                }
+            }
+
+            foundClubsEntity.setAlpha(beta);
+        }; // end if
+
+        // delete the club if after quiting there are zero members.
+        if ( foundClubsEntity.getMembers().size() < 1 ) { clubsRepositoryDAO.deleteOneById(clubId); };
+
+        userRepositoryDAO.save(foundUserEntity);
+        clubsRepositoryDAO.save(foundClubsEntity);
 
         String userRemoved = "user removed from club";
         return userRemoved;

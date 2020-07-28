@@ -1,9 +1,11 @@
 package neural.controller;
 
 import core.services.MessagesEntityService;
+import db.entity.ClubsEntity;
 import db.entity.FriendshipsEntity;
 import db.entity.MessagesEntity;
 import db.entity.UserEntity;
+import db.repository.ClubsRepositoryDAO;
 import db.repository.FriendshipsRepositoryDAO;
 import db.repository.MessagesRepositoryDAO;
 import db.repository.UserRepositoryDAO;
@@ -28,34 +30,36 @@ public class MessagesController extends AbstractRestController {
 
     private MessagesEntityService messagesEntityService;
     private MessagesRepositoryDAO messagesRepositoryDAO;
+    private ClubsRepositoryDAO clubsRepositoryDAO;
     private final UserRepositoryDAO userRepositoryDAO;
     private final FriendshipsRepositoryDAO friendshipsRepositoryDAO;
 
-    public MessagesController(MessagesEntityService messagesEntityService, MessagesRepositoryDAO messagesRepositoryDAO, final UserRepositoryDAO userRepositoryDAO, FriendshipsRepositoryDAO friendshipsRepositoryDAO ) {
+    public MessagesController(MessagesEntityService messagesEntityService, MessagesRepositoryDAO messagesRepositoryDAO, final UserRepositoryDAO userRepositoryDAO, FriendshipsRepositoryDAO friendshipsRepositoryDAO, ClubsRepositoryDAO clubsRepositoryDAO ) {
         this.messagesEntityService = messagesEntityService;
         this.messagesRepositoryDAO = messagesRepositoryDAO;
         this.userRepositoryDAO = userRepositoryDAO;
         this.friendshipsRepositoryDAO = friendshipsRepositoryDAO;
+        this.clubsRepositoryDAO = clubsRepositoryDAO;
     }
 
     // GET a single message *** Not used....
-    @ApiOperation(value = "getMessagesEntity")
-    @RequestMapping(value = "/a{mId}", method = RequestMethod.GET)
-    public ResponseEntity<MessagesEntityDto> getMessagesEntity(
-            @RequestHeader("Authorization") String token,
-            //@PathVariable("cId") final Long clubsEntityId) {
-            @RequestParam("mId") final Long messagesEntityId) {
-        String base64Credentials = token.substring("Basic".length()).trim();
-        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
-        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
-        // credentials = username:password
-        final String[] values = credentials.split(":", 2);
-        String user = values[0];
+    //@ApiOperation(value = "getMessagesEntity")
+    //@RequestMapping(value = "/a{mId}", method = RequestMethod.GET)
+    //public ResponseEntity<MessagesEntityDto> getMessagesEntity(
+    //        @RequestHeader("Authorization") String token,
+    //        //@PathVariable("cId") final Long clubsEntityId) {
+    //        @RequestParam("mId") final Long messagesEntityId) {
+    //    String base64Credentials = token.substring("Basic".length()).trim();
+    //    byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+    //    String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+    //    // credentials = username:password
+    //    final String[] values = credentials.split(":", 2);
+    //    String user = values[0];
 
-        MessagesEntityDto messagesEntityDto = messagesEntityService.getMessagesEntity(messagesEntityId );
-        if (messagesEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
-        return ResponseEntity.ok(messagesEntityDto);
-    }
+    //    MessagesEntityDto messagesEntityDto = messagesEntityService.getMessagesEntity(messagesEntityId );
+    //    if (messagesEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+    //    return ResponseEntity.ok(messagesEntityDto);
+    //}
 
     // GET list of messages for a club
     @ApiOperation(value = "getMessagesEntity")
@@ -71,11 +75,13 @@ public class MessagesController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        Set<MessagesEntity> clubMessages = messagesRepositoryDAO.getClubMessages(clubsEntityId);
+        // validation. User is indeed in club.
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubsEntityId);
+        Set<UserEntity> foundUserSet = foundClubsEntity.getMembers();
+        if ( !foundUserSet.contains(foundUserEntity) ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
 
-        // TODO check that user is in club (validation)
-        // for loop to clean Set data
-        // if empty return empty set.
+        Set<MessagesEntity> clubMessages = messagesRepositoryDAO.getClubMessages(clubsEntityId);
 
         // reduce data and don't share passowrds etc.
         for (MessagesEntity y : clubMessages) {
@@ -106,6 +112,8 @@ public class MessagesController extends AbstractRestController {
 
         UserEntity senderUserEntity = userRepositoryDAO.findOneByUserName(user);
 
+        // validation. none needed here since posting message does validation. therefore db ok, and user must be in club.
+
         // get messages sent by logged in user
         Set<MessagesEntity> twoUsersMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(senderUserEntity, individualEntityId, new Long(1));
 
@@ -119,10 +127,6 @@ public class MessagesController extends AbstractRestController {
         }
 
         twoUsersMessages.addAll(newReceivedMessages);
-
-        // TODO check that user is in club (validation)
-        // for loop to clean Set data
-        // if empty return empty set.
 
         return ResponseEntity.ok(twoUsersMessages);
     }
@@ -147,6 +151,9 @@ public class MessagesController extends AbstractRestController {
         FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneById(friendshipsEntityId);
         UserEntity friendsUserEntity = userRepositoryDAO.findOneByUserName(foundFriendshipsEntity.getFriend()); // TODO this is inefficent string search instead of id# search
 
+        // validation. validate that friend(via friendshipsEntity) is indeed in user's friend's list.
+        if ( !senderUserEntity.getFriendsSet().contains(foundFriendshipsEntity) ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+
         // get messages sent by logged in user
         Set<MessagesEntity> twoUsersMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(senderUserEntity, friendsUserEntity.getId(), new Long(4));
 
@@ -168,10 +175,6 @@ public class MessagesController extends AbstractRestController {
             y.getSender().setEducation(null);
         }
 
-        // TODO check that user is in club (validation)
-        // for loop to clean Set data
-        // if empty return empty set.
-
         return ResponseEntity.ok(twoUsersMessages);
     }
 
@@ -188,6 +191,8 @@ public class MessagesController extends AbstractRestController {
         String user = values[0];
 
         UserEntity receiverUserEntity = userRepositoryDAO.findOneByUserName(user);
+
+        // validation. none needed here. based on 'user'.
 
         Set<MessagesEntity> alertsContactMessages = messagesRepositoryDAO.findAllByReceiverIdAndReceiverTypeAndRedFlag(receiverUserEntity.getId(), new Long(4), new Long(0));
 
@@ -214,6 +219,8 @@ public class MessagesController extends AbstractRestController {
 
         UserEntity receiverUserEntity = userRepositoryDAO.findOneByUserName(user);
 
+        // validation. none needed here. based on 'user'.
+
         Set<MessagesEntity> alertsClubMessages = messagesRepositoryDAO.getAlertsNewCLubMessages(receiverUserEntity.getId());
 
         return ResponseEntity.ok(alertsClubMessages);
@@ -232,6 +239,8 @@ public class MessagesController extends AbstractRestController {
         String user = values[0];
 
         UserEntity receiverUserEntity = userRepositoryDAO.findOneByUserName(user);
+
+        // validation. none needed here. posted messages would ensure user in club. here, it is just receiver messages, validated through token.
 
         Set<MessagesEntity> alertsClubMessages = messagesRepositoryDAO.getAlertsNewGuildMessages(receiverUserEntity.getId());
 
@@ -254,10 +263,13 @@ public class MessagesController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        // TODO validations
-
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
         FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneById(friendshipsEntityId);
         UserEntity friendsUserEntity = userRepositoryDAO.findOneByUserName(foundFriendshipsEntity.getFriend());
+
+        // validation.  user is indeed in the specified friendshipsEntity.
+        if ( !foundFriendshipsEntity.getUserEntity().equals(foundUserEntity) ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+
         messagesEntityDto.setReceiverId(friendsUserEntity.getId());
         MessagesEntityDto savedMessagesEntityDto = messagesEntityService.createMessagesEntity(messagesEntityDto, user);
 
@@ -282,7 +294,7 @@ public class MessagesController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        // TODO validations
+        // validations. see the service method for the validations.
 
         MessagesEntityDto savedMessagesEntityDto = messagesEntityService.createMessagesEntity(messagesEntityDto, user);
 
@@ -312,7 +324,9 @@ public class MessagesController extends AbstractRestController {
         UserEntity userEntity = userRepositoryDAO.findOneByUserName(user);
         UserEntity friendsUserEntity = userRepositoryDAO.findOneByUserName(friendsName);
 
-        // TODO validation: check that friend is indeed in user's friends list or clubs list etc.
+        // validation. none needed as 'user' is authenticated and is the receiver
+        //FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneByUserEntityIdAndFriend(userEntity.getId(), friendsName);
+        //if ( foundFriendshipsEntity == null ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
 
         Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(friendsUserEntity, userEntity.getId(), new Long(4));
         for (MessagesEntity x : newReceivedMessages) {
@@ -343,7 +357,7 @@ public class MessagesController extends AbstractRestController {
         UserEntity userEntity = userRepositoryDAO.findOneByUserName(user);
         UserEntity friendsUserEntity = userRepositoryDAO.findOneByUserName(friendsName);
 
-        // TODO validation: check that friend is indeed in user's friends list or clubs list etc.
+        // validation. none needed as 'user' is authenticated and is the receiver
 
         Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverTypeAndClubName(friendsUserEntity, userEntity.getId(), type, clubName);
         for (MessagesEntity x : newReceivedMessages) {

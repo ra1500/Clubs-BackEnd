@@ -1,8 +1,10 @@
 package core.services;
 
 import core.transformers.MessagesEntityDtoTransformer;
+import db.entity.ClubsEntity;
 import db.entity.MessagesEntity;
 import db.entity.UserEntity;
+import db.repository.ClubsRepositoryDAO;
 import db.repository.MessagesRepositoryDAO;
 import db.repository.UserRepositoryDAO;
 import model.MessagesEntityDto;
@@ -22,12 +24,14 @@ public class MessagesEntityService {
     private final MessagesRepositoryDAO messagesRepositoryDAO;
     private final MessagesEntityDtoTransformer messagesEntityDtoTransformer;
     private final UserRepositoryDAO userRepositoryDAO;
+    private final ClubsRepositoryDAO clubsRepositoryDAO;
 
     public MessagesEntityService(final MessagesRepositoryDAO messagesRepositoryDAO,
-                              final MessagesEntityDtoTransformer messagesEntityDtoTransformer, final UserRepositoryDAO userRepositoryDAO) {
+                              final MessagesEntityDtoTransformer messagesEntityDtoTransformer, final UserRepositoryDAO userRepositoryDAO, ClubsRepositoryDAO clubsRepositoryDAO) {
         this.messagesRepositoryDAO = messagesRepositoryDAO;
         this.messagesEntityDtoTransformer = messagesEntityDtoTransformer;
         this.userRepositoryDAO = userRepositoryDAO;
+        this.clubsRepositoryDAO = clubsRepositoryDAO;
     }
 
         // GET
@@ -39,6 +43,20 @@ public class MessagesEntityService {
     public MessagesEntityDto createMessagesEntity(final MessagesEntityDto messagesEntityDto, String userName) {
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
         messagesEntityDto.setSender(foundUserEntity);
+
+        // validation. if a club message, is user in club.
+        if ( messagesEntityDto.getReceiverType().equals(new Long(2)) ) {
+            ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(messagesEntityDto.getReceiverId());
+            if ( !foundUserEntity.getClubs().contains(foundClubsEntity) ) { messagesEntityDto.setMessage("error"); return messagesEntityDto; };
+        }
+
+        // validation. if a club member to club member message, are both members in the club.
+        if ( messagesEntityDto.getReceiverType().equals(new Long(1)) ) {
+            ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneByClubName(messagesEntityDto.getClubName());
+            Set<UserEntity> members = foundClubsEntity.getMembers();
+            UserEntity receiver = userRepositoryDAO.findOneById(messagesEntityDto.getReceiverId());
+            if ( !(members.contains(foundUserEntity) && members.contains(receiver)) ) { messagesEntityDto.setMessage("error"); return messagesEntityDto; };
+        }
 
         // currently limiting to posting 1,000 messages per day
         // this is not quite perfect since 'receiverId' can refer to clubId or userId and therefore may count up more than intended.

@@ -37,8 +37,13 @@ public class ClubInvitationsEntityService {
     }
 
     // GET
-    public ClubInvitationsEntityDto getClubInvitationsEntity(final Long clubInvitationsEntityId) {
-        return clubInvitationsEntityDtoTransformer.generate(clubInvitationsRepositoryDAO.findOneById(clubInvitationsEntityId));
+    public ClubInvitationsEntityDto getClubInvitationsEntity(final Long clubInvitationsEntityId, String user)  {
+
+        // validation. invitation does indeed belong to this user
+        ClubInvitationsEntity foundClubInvitationsEntity = clubInvitationsRepositoryDAO.findOneById(clubInvitationsEntityId);
+        if ( !(foundClubInvitationsEntity.getReceiver().equals(user)) ) { return new ClubInvitationsEntityDto(); }
+
+        return clubInvitationsEntityDtoTransformer.generate(foundClubInvitationsEntity);
     }
 
     // GET new club invitations set
@@ -54,10 +59,14 @@ public class ClubInvitationsEntityService {
     }
 
     // POST a new club invitation
-    public ClubInvitationsEntityDto createClubInvitationsEntity(final ClubInvitationsEntityDto clubInvitationsEntityDto, final String userName, final Long clubId) {
+    public ClubInvitationsEntityDto createClubInvitationsEntity(final ClubInvitationsEntityDto clubInvitationsEntityDto, final String user, final Long clubId) {
+
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
 
         // check db if receiver exists
         UserEntity receiverUserEntity = userRepositoryDAO.findOneByUserName(clubInvitationsEntityDto.getReceiver());
+        if ( receiverUserEntity == null ) { clubInvitationsEntityDto.setReceiver("error. user not found"); return clubInvitationsEntityDto; };
+
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
 
         // check if club already full or not.
@@ -68,13 +77,19 @@ public class ClubInvitationsEntityService {
             clubInvitationsEntityDto.setStatus(new Long(5)); // status 5 = club is full.
             return clubInvitationsEntityDto; };
 
-        // TODO if receiver not found, return a not found message.
-        // TODO check if an invitation had already been sent before. or if receiver already in club.
-        // TODO check and make sure user is indeed in club
-        // TODO check that not an invitation to self.
+        // validation. is user indeed in club
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { clubInvitationsEntityDto.setReceiver("error. user not in club"); return clubInvitationsEntityDto; };
+
+        // validation. no invitation to self
+        if ( clubInvitationsEntityDto.getReceiver().equals(user) ) { clubInvitationsEntityDto.setReceiver("error. self-invitation"); return clubInvitationsEntityDto; };
+
+        // validation. is receiver already in club?
+        if ( foundClubsEntity.getMembers().contains(receiverUserEntity) ) { clubInvitationsEntityDto.setReceiver("error. user is already a member"); return clubInvitationsEntityDto; };
+
+        // validation. currently, more than one invitation for same club can be produced since then user can see different inviters
 
         // add the sender's UserEntity
-        UserEntity senderUserEntity = userRepositoryDAO.findOneByUserName(userName);
+        UserEntity senderUserEntity = userRepositoryDAO.findOneByUserName(user);
         clubInvitationsEntityDto.setSender(senderUserEntity);
 
         // add the club
@@ -106,13 +121,17 @@ public class ClubInvitationsEntityService {
 
             UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
 
+            // validation. is user already in club? (if so, then just break and return the foundClubInvitationEntity).
+            ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
+            if ( foundClubsEntity.getMembers().contains(foundUserEntity) ) { return clubInvitationsEntityDto; };
+
             // check that user is under max.# of clubs can join
             Integer countOfClubsJoined = foundUserEntity.getClubs().size();
             if ( countOfClubsJoined > 30 ) {
                 clubInvitationsEntityDto.setReceiver("OVER LIMIT");
                 return clubInvitationsEntityDto; }
 
-            ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
+            //ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
             Long maxSize = foundClubsEntity.getMaxSize();
             Set<UserEntity> members = foundClubsEntity.getMembers();
             Integer membersCount = members.size();

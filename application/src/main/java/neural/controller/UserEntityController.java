@@ -288,8 +288,8 @@ public class UserEntityController extends AbstractRestController {
             @RequestBody
             final UserEntityDto userEntityDto) {
 
-        if (userEntityDto.getUserName().length() < 4 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
-        if (userEntityDto.getPassword().length() < 4 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+        if (userEntityDto.getUserName().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+        if (userEntityDto.getPassword().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         if (userEntityRepository.findOneByUserName(userEntityDto.getUserName()) != null ) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }

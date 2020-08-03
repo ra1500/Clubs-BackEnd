@@ -3,6 +3,7 @@ package core.services;
 import core.transformers.VotesEntityDtoTransformer;
 import db.entity.ClubsEntity;
 import db.entity.UserEntity;
+import db.entity.VoteCountsClubAlpha;
 import db.entity.VotesEntity;
 import db.repository.ClubsRepositoryDAO;
 import db.repository.UserRepositoryDAO;
@@ -13,6 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class VotesEntityService {
@@ -70,6 +74,30 @@ public class VotesEntityService {
 
         // add the vote to the club's set of votes
         foundClubsEntity.getVotes().add(savedVotesEntity);
+
+        // COUP D'ETAT - update alpha if vote changes majority of alpha votes
+        String[] voteCountsClubAlphas = votesRepositoryDAO.getAlphaVoteCounts(foundClubsEntity.getId());
+        Set<VoteCountsClubAlpha> setOfVotes = new HashSet<>();
+
+        for (String x : voteCountsClubAlphas) {
+            String[] y = x.split(",");
+            setOfVotes.add(new VoteCountsClubAlpha( y[0], new Integer(y[1]) ));
+        }
+
+        int maxCount = 0;
+        int currentCount;
+        String alpha = "";
+        for (VoteCountsClubAlpha x : setOfVotes ) {
+            currentCount = x.getCountVotesCast();
+            if (currentCount > maxCount) {
+                maxCount = currentCount;
+                alpha = x.getVoteCast();
+            }
+        }
+        if ( !foundClubsEntity.getAlpha().equals(alpha) ) {
+            foundClubsEntity.setAlpha(alpha);
+            clubsRepositoryDAO.save(foundClubsEntity);
+        };
 
         return votesEntityDtoTransformer.generate(savedVotesEntity);
         }

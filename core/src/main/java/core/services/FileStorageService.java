@@ -46,7 +46,7 @@ public class FileStorageService {
         }
     }
 
-    // Get a file
+    // Get a file - used for public profile
     public Resource loadFileAsResource(String fileName) {
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();

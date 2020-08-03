@@ -69,6 +69,9 @@ public class ClubInvitationsEntityService {
 
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
 
+        // validation. ensure not duplicate invitation (status could be 'declined' or 'accepted'. so no dups in db not valid check).
+        if ( clubInvitationsRepositoryDAO.findOneBySenderAndReceiverAndClub(foundUserEntity.getId(), receiverUserEntity.getUserName(), clubId) != null ) { clubInvitationsEntityDto.setReceiver("error. invitation already previously sent"); return clubInvitationsEntityDto; };
+
         // check if club already full or not.
         Long maxSize = foundClubsEntity.getMaxSize();
         Set<UserEntity> members = foundClubsEntity.getMembers();
@@ -86,7 +89,10 @@ public class ClubInvitationsEntityService {
         // validation. is receiver already in club?
         if ( foundClubsEntity.getMembers().contains(receiverUserEntity) ) { clubInvitationsEntityDto.setReceiver("error. user is already a member"); return clubInvitationsEntityDto; };
 
-        // validation. currently, more than one invitation for same club can be produced since then user can see different inviters
+        // validation. not a duplicate invitation (sender, receiver, clubId)
+
+
+        // validation. currently, more than one invitation for same club can be produced if from different sender)
 
         // add the sender's UserEntity
         UserEntity senderUserEntity = userRepositoryDAO.findOneByUserName(user);

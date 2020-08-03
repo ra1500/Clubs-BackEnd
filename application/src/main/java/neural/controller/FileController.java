@@ -226,9 +226,9 @@ public class FileController {
 
             String imageSelected;
             UserEntity foundUserEntity = userEntityRepository.findOneByUserName(userName);
-             if (foundUserEntity == null) { imageSelected = null;}
+             if (foundUserEntity == null) { imageSelected = "profiledefault.jpg";}
              else if (foundUserEntity.getPublicProfile().equals("Public") ) {imageSelected = userName + "1.jpg"; }
-             else { imageSelected = null;}
+             else { imageSelected = "profiledefault.jpg";}
 
             Resource resource = fileStorageService.loadFileAsResource(imageSelected);
 

@@ -1,8 +1,10 @@
 package core.services;
 
 import core.transformers.UserEntityDtoTransformer;
+import db.entity.ClubsEntity;
 import db.entity.FriendshipsEntity;
 import db.entity.UserEntity;
+import db.repository.ClubsRepositoryDAO;
 import db.repository.FriendshipsRepositoryDAO;
 import db.repository.UserRepositoryDAO;
 import model.UserEntityDto;
@@ -22,12 +24,14 @@ public class UserEntityService {
     private final UserRepositoryDAO userEntityRepository;
     private final UserEntityDtoTransformer userEntityDtoTransformer;
     private FriendshipsRepositoryDAO friendshipsRepositoryDAO;
+    private final ClubsRepositoryDAO clubsRepositoryDAO;
 
     public UserEntityService(final UserRepositoryDAO userEntityRepository, final UserEntityDtoTransformer userEntityDtoTransformer,
-                             FriendshipsRepositoryDAO friendshipsRepositoryDAO) {
+                             FriendshipsRepositoryDAO friendshipsRepositoryDAO, ClubsRepositoryDAO clubsRepositoryDAO) {
         this.userEntityRepository = userEntityRepository;
         this.userEntityDtoTransformer = userEntityDtoTransformer;
         this.friendshipsRepositoryDAO = friendshipsRepositoryDAO;
+        this.clubsRepositoryDAO = clubsRepositoryDAO;
     }
 
     // GET
@@ -95,15 +99,16 @@ public class UserEntityService {
         return userEntityDtoTransformer.generate(friendUserEntity);
     }
 
-    // GET friend userEntity for profile text in Network render single contact
+    // GET friend userEntity for profile text render single contact club member
     public UserEntityDto getClubMember(final String user, final Long clubId, final Long memberId) {
 
-        //
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
         UserEntity foundUserEntity = userEntityRepository.findOneByUserName(user);
-
         UserEntity foundClubMember = userEntityRepository.findOneById(memberId);
 
-        // TODO validate user in club, and this member is in that club.
+        // validation. are both in club
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return new UserEntityDto(); };
+        if ( !foundClubsEntity.getMembers().contains(foundClubMember) ) { return new UserEntityDto(); };
 
         return userEntityDtoTransformer.generate(foundClubMember);
     }

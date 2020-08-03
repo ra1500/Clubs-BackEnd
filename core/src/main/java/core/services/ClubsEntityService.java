@@ -57,6 +57,7 @@ public class ClubsEntityService {
     public ClubsEntityDto createClubsEntity(final ClubsEntityDto clubsEntityDto, final String userName) {
 
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
+        clubsEntityDto.setAlpha(userName);  // doesnt make sense to have it be anyone else than the creator.
 
         // first, check that user is under max.# of clubs can join
         Integer countOfClubsJoined = foundUserEntity.getClubs().size();
@@ -117,7 +118,6 @@ public class ClubsEntityService {
         if (clubsEntityDto.getMaxSize() < 1) { foundClubsEntity.setMaxSize(new Long(1)); };
         }
         catch (NumberFormatException nfe) { foundClubsEntity.setMaxSize(foundClubsEntity.getMaxSize()); };
-
 
         // no change in alpha. should be based on max votes, or oldest create date of membership.
 
@@ -184,7 +184,8 @@ public class ClubsEntityService {
         }; // end if
 
         // delete the club if after quiting there are zero members.
-        if ( foundClubsEntity.getMembers().size() < 1 ) { clubsRepositoryDAO.deleteOneById(clubId); };
+        //if ( foundClubsEntity.getMembers().size() < 1 ) { clubsRepositoryDAO.deleteOneById(clubId); };
+        // delete messages in the club, and between club members.
 
         userRepositoryDAO.save(foundUserEntity);
         clubsRepositoryDAO.save(foundClubsEntity);

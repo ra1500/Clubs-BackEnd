@@ -2,6 +2,8 @@ package db.repository;
 
 import db.entity.MessagesEntity;
 import db.entity.UserEntity;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Repository
@@ -17,7 +20,10 @@ public interface MessagesRepositoryDAO extends JpaRepository<MessagesEntity, Lon
     MessagesEntity findOneById(Long id);
 
     @Query("SELECT m FROM MessagesEntity m WHERE m.receiverId = :receiverId AND m.receiverType = 2")
-    Set<MessagesEntity> getClubMessages(@Param("receiverId") Long receiverId);
+    Slice<MessagesEntity> getClubMessages(@Param("receiverId") Long receiverId, Pageable paging);
+
+    // not used, but same result as getClubMessages
+    //Slice<MessagesEntity> findAllByReceiverIdAndReceiverType(Long receiverId, Long receiverType, Pageable paging);
 
     //@Query("SELECT m FROM MessagesEntity m WHERE m.sender = sender AND m.receiverId = :receiverId AND m.receiverType = 1")
     //Set<MessagesEntity> getTwoUsersMessages(@Param("sender") UserEntity sender, @Param("receiverId") Long receiverId);

@@ -21,6 +21,7 @@ import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -63,10 +64,11 @@ public class MessagesController extends AbstractRestController {
 
     // GET list of messages for a club
     @ApiOperation(value = "getMessagesEntity")
-    @RequestMapping(value = "/c{cId}", method = RequestMethod.GET)
-    public ResponseEntity<Set<MessagesEntity>> getClubMessages(
+    @RequestMapping(value = "/c{cId}{pN}", method = RequestMethod.GET)
+    public ResponseEntity<List<MessagesEntity>> getClubMessages(
             @RequestHeader("Authorization") String token,
             //@PathVariable("cId") final Long clubsEntityId) {
+            @RequestParam(name = "pN", defaultValue = "0" ) Integer pageNo,
             @RequestParam("cId") final Long clubsEntityId) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -81,7 +83,8 @@ public class MessagesController extends AbstractRestController {
         Set<UserEntity> foundUserSet = foundClubsEntity.getMembers();
         if ( !foundUserSet.contains(foundUserEntity) ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
 
-        Set<MessagesEntity> clubMessages = messagesRepositoryDAO.getClubMessages(clubsEntityId);
+        //Set<MessagesEntity> clubMessages = messagesRepositoryDAO.getClubMessages(clubsEntityId);
+        List<MessagesEntity> clubMessages = messagesEntityService.getClubMessages(clubsEntityId, pageNo);
 
         // reduce data and don't share passowrds etc.
         for (MessagesEntity y : clubMessages) {

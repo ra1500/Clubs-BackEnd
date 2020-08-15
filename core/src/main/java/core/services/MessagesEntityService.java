@@ -10,11 +10,17 @@ import db.repository.UserRepositoryDAO;
 import model.MessagesEntityDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -38,6 +44,20 @@ public class MessagesEntityService {
         public MessagesEntityDto getMessagesEntity(final Long messagesEntityId) {
             return messagesEntityDtoTransformer.generate(messagesRepositoryDAO.findOneById(messagesEntityId));
         }
+
+    // GET club messages
+    public List<MessagesEntity> getClubMessages(final Long clubsEntityId, final Integer pageNo) {
+
+        Pageable paging = PageRequest.of(pageNo, 12, Sort.by("id").descending()); // descending order, so that default page of '0' is last page.
+
+        Slice<MessagesEntity> slicedResult = messagesRepositoryDAO.getClubMessages(clubsEntityId, paging); // using 'Slice' instead of 'Page' since no need for count
+
+        List<MessagesEntity> clubMessagesList = slicedResult.getContent();
+        //Comparator<MessagesEntity> byId = Comparator.comparingLong(MessagesEntity::getId); // TODO this does not work. Slice not sortable or something. figure out way to sort this ascending by id. for now, front-end sorts list.
+        //clubMessagesList.sort(byId);  // also sorted redundantly on front-end
+
+        return clubMessagesList;
+    }
 
     // POST a message
     public MessagesEntityDto createMessagesEntity(final MessagesEntityDto messagesEntityDto, String userName) {

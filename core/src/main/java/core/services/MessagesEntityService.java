@@ -46,9 +46,13 @@ public class MessagesEntityService {
         }
 
     // GET club messages
-    public List<MessagesEntity> getClubMessages(final Long clubsEntityId, final Integer pageNo) {
+    public List<MessagesEntity> getClubMessages(final Long clubsEntityId, Integer pageNo) {
 
-        Pageable paging = PageRequest.of(pageNo, 12, Sort.by("id").descending()); // descending order, so that default page of '0' is last page.
+        // max# of pages allowed to pull
+        if ( pageNo > 10 ) { pageNo = new Integer(10); };
+
+        // max# of messages per ajax call is second parameter
+        Pageable paging = PageRequest.of(pageNo, 200, Sort.by("id").descending()); // descending order, so that default page of '0' is last page.
 
         Slice<MessagesEntity> slicedResult = messagesRepositoryDAO.getClubMessages(clubsEntityId, paging); // using 'Slice' instead of 'Page' since no need for count
 

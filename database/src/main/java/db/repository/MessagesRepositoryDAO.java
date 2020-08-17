@@ -28,7 +28,11 @@ public interface MessagesRepositoryDAO extends JpaRepository<MessagesEntity, Lon
     //@Query("SELECT m FROM MessagesEntity m WHERE m.sender = sender AND m.receiverId = :receiverId AND m.receiverType = 1")
     //Set<MessagesEntity> getTwoUsersMessages(@Param("sender") UserEntity sender, @Param("receiverId") Long receiverId);
 
+    //Slice<MessagesEntity> findAllBySenderAndReceiverIdAndReceiverType(UserEntity sender, Long receiverId, Long receiverType, Pageable paging);
     Set<MessagesEntity> findAllBySenderAndReceiverIdAndReceiverType(UserEntity sender, Long receiverId, Long receiverType);
+
+    @Query("SELECT m FROM MessagesEntity m WHERE (m.receiverId = :userId AND m.sender = :memberEntity AND m.receiverType = :receiverType) OR (m.receiverId = :memberId AND m.sender = :userEntity AND m.receiverType = :receiverType) ")
+    Slice<MessagesEntity> getMessagesBetweenTwoClubMembers(UserEntity userEntity, UserEntity memberEntity, Long userId, Long memberId, Long receiverType, Pageable paging);
 
     @Query("SELECT m FROM MessagesEntity m WHERE m.sender = :sender AND m.receiverId = :receiverId AND m.created > :yesterday ")
     Set<MessagesEntity> getAllWithinOneDay(UserEntity sender, Long receiverId, Date yesterday);

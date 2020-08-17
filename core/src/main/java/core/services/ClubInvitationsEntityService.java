@@ -70,7 +70,7 @@ public class ClubInvitationsEntityService {
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
 
         // validation. ensure not duplicate invitation (status could be 'declined' or 'accepted'. so no dups in db not valid check).
-        if ( clubInvitationsRepositoryDAO.findOneBySenderAndReceiverAndClub(foundUserEntity.getId(), receiverUserEntity.getUserName(), clubId) != null ) { clubInvitationsEntityDto.setReceiver("error. invitation already previously sent"); return clubInvitationsEntityDto; };
+        if ( clubInvitationsRepositoryDAO.findOneBySenderAndReceiverAndClub(foundUserEntity, receiverUserEntity.getUserName(), foundClubsEntity) != null ) { clubInvitationsEntityDto.setReceiver("error. invitation already previously sent"); return clubInvitationsEntityDto; };
 
         // check if club already full or not.
         Long maxSize = foundClubsEntity.getMaxSize();

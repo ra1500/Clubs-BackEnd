@@ -1,6 +1,8 @@
 package db.repository;
 
 import db.entity.ClubInvitationsEntity;
+import db.entity.ClubsEntity;
+import db.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,7 +16,7 @@ public interface ClubInvitationsRepositoryDAO extends JpaRepository<ClubInvitati
 
     Set<ClubInvitationsEntity> findAllByReceiverAndStatus(String receiver, Long status);
 
-    ClubInvitationsEntity findOneBySenderAndReceiverAndClub(Long senderId, String receiver, Long clubId );
+    ClubInvitationsEntity findOneBySenderAndReceiverAndClub(UserEntity sender, String receiver, ClubsEntity clubsEntity );
 
     @Transactional
     Integer deleteOneById(Long id);

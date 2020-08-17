@@ -63,6 +63,65 @@ public class MessagesEntityService {
         return clubMessagesList;
     }
 
+    // GET messages between two club/guild members
+    public List<MessagesEntity> getTwoMemberMessages(final UserEntity userEntity, final UserEntity memberEntity, Integer pageNo) {
+
+        // max# of pages allowed to pull
+        if ( pageNo > 10 ) { pageNo = new Integer(10); };
+        // max# of messages per ajax call is second parameter
+        Pageable paging = PageRequest.of(pageNo, 12, Sort.by("id").descending()); // descending order, so that default page of '0' is last page.
+
+        Slice<MessagesEntity> twoClubMembersMessages = messagesRepositoryDAO.getMessagesBetweenTwoClubMembers(userEntity, memberEntity, userEntity.getId(), memberEntity.getId() ,new Long(1), paging);
+        List<MessagesEntity> list = twoClubMembersMessages.getContent();
+
+        for (MessagesEntity x : list) {
+            if (x.getRedFlag().equals(new Long(0)) && x.getReceiverId().equals(userEntity.getId()) ) {
+                x.setRedFlag(new Long(1));
+                messagesRepositoryDAO.save(x);}
+        }
+
+        for (MessagesEntity x : list) {
+            x.getSender().setPassword(null); x.getSender().setBlurb(null); x.getSender().setTitle(null);
+            x.getSender().setContactInfo(null); x.getSender().setPublicProfile(null); x.getSender().setCreated(null);
+            x.getSender().setLocation(null);
+            x.getSender().setRelationshipStatus(null); x.getSender().setOccupation(null); x.getSender().setEducation(null);
+        }
+
+        // TODO figure out way to sort list ascending by id. for now, front-end sorts list.
+
+        return list;
+    }
+
+    // GET messages between two friends
+    public List<MessagesEntity> getTwoFriendMessages(final UserEntity userEntity, final UserEntity memberEntity, Integer pageNo) {
+
+        // max# of pages allowed to pull
+        if ( pageNo > 10 ) { pageNo = new Integer(10); };
+        // max# of messages per ajax call is second parameter
+        Pageable paging = PageRequest.of(pageNo, 12, Sort.by("id").descending()); // descending order, so that default page of '0' is last page.
+
+        Slice<MessagesEntity> twoFriendMembersMessages = messagesRepositoryDAO.getMessagesBetweenTwoClubMembers(userEntity, memberEntity, userEntity.getId(), memberEntity.getId() ,new Long(4), paging);
+        List<MessagesEntity> list = twoFriendMembersMessages.getContent();
+
+        for (MessagesEntity x : list) {
+            if (x.getRedFlag().equals(new Long(0)) && x.getReceiverId().equals(userEntity.getId()) ) {
+                x.setRedFlag(new Long(1));
+                messagesRepositoryDAO.save(x);}
+        }
+
+        for (MessagesEntity x : list) {
+            x.getSender().setPassword(null); x.getSender().setBlurb(null); x.getSender().setTitle(null);
+            x.getSender().setContactInfo(null); x.getSender().setPublicProfile(null); x.getSender().setCreated(null);
+            x.getSender().setLocation(null);
+            x.getSender().setRelationshipStatus(null); x.getSender().setOccupation(null); x.getSender().setEducation(null);
+        }
+
+        // TODO figure out way to sort list ascending by id. for now, front-end sorts list.
+
+        return list;
+    }
+
+
     // POST a message
     public MessagesEntityDto createMessagesEntity(final MessagesEntityDto messagesEntityDto, String userName) {
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);

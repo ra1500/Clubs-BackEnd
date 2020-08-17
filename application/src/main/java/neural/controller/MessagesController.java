@@ -99,11 +99,12 @@ public class MessagesController extends AbstractRestController {
 
     // GET list of messages between two club/guild members.
     @ApiOperation(value = "getIndividualMessagesEntity")
-    @RequestMapping(value = "/i{iId}", method = RequestMethod.GET)
-    public ResponseEntity<Set<MessagesEntity>> getIndividualMessages(
+    @RequestMapping(value = "/i{iId}{pN}", method = RequestMethod.GET)
+    public ResponseEntity<List<MessagesEntity>> getIndividualMessages(
             @RequestHeader("Authorization") String token,
             //@PathVariable("cId") final Long clubsEntityId) {
-            @RequestParam("iId") final Long individualEntityId) {
+            @RequestParam(name = "pN", defaultValue = "0" ) Integer pageNo,
+            @RequestParam("iId") final Long memberId) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
         String credentials = new String(credDecoded, StandardCharsets.UTF_8);
@@ -111,35 +112,23 @@ public class MessagesController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        //TODO should this go through service and transformer instead of direct to messagesRepository?
-
-        UserEntity senderUserEntity = userRepositoryDAO.findOneByUserName(user);
+        UserEntity userEntity = userRepositoryDAO.findOneByUserName(user);
+        UserEntity memberEntity = userRepositoryDAO.findOneById(memberId);
 
         // validation. none needed here since posting message does validation. therefore db ok, and user must be in club.
 
-        // get messages sent by logged in user
-        Set<MessagesEntity> twoUsersMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(senderUserEntity, individualEntityId, new Long(1));
-
-        // add messages sent by other person/club member. Also, change flag to read/1.
-        UserEntity receiverUserEntity = userRepositoryDAO.findOneById(individualEntityId);
-        Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(receiverUserEntity, senderUserEntity.getId(), new Long(1));
-        for (MessagesEntity x : newReceivedMessages) {
-            if (x.getRedFlag().equals(new Long(0))) {
-            x.setRedFlag(new Long(1));
-            messagesRepositoryDAO.save(x);}
-        }
-
-        twoUsersMessages.addAll(newReceivedMessages);
-
+        List<MessagesEntity> twoUsersMessages = messagesEntityService.getTwoMemberMessages(userEntity, memberEntity , pageNo);
         return ResponseEntity.ok(twoUsersMessages);
+
     }
 
     // GET list of messages between two friends/contacts.
     @ApiOperation(value = "getIndividualMessagesEntity")
-    @RequestMapping(value = "/d{fId}", method = RequestMethod.GET)
-    public ResponseEntity<Set<MessagesEntity>> getFriendMessages(
+    @RequestMapping(value = "/d{fId}{pN}", method = RequestMethod.GET)
+    public ResponseEntity<List<MessagesEntity>> getFriendMessages(
             @RequestHeader("Authorization") String token,
             //@PathVariable("cId") final Long clubsEntityId) {
+            @RequestParam(name = "pN", defaultValue = "0" ) Integer pageNo,
             @RequestParam("fId") final Long friendshipsEntityId) {
         String base64Credentials = token.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -148,37 +137,15 @@ public class MessagesController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        //TODO should this go through service and transformer instead of direct to messagesRepository?
-
-        UserEntity senderUserEntity = userRepositoryDAO.findOneByUserName(user);
+        UserEntity userEntity = userRepositoryDAO.findOneByUserName(user);
         FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneById(friendshipsEntityId);
         UserEntity friendsUserEntity = userRepositoryDAO.findOneByUserName(foundFriendshipsEntity.getFriend()); // TODO this is inefficent string search instead of id# search
 
         // validation. validate that friend(via friendshipsEntity) is indeed in user's friend's list.
-        if ( !senderUserEntity.getFriendsSet().contains(foundFriendshipsEntity) ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+        if ( !userEntity.getFriendsSet().contains(foundFriendshipsEntity) ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
 
-        // get messages sent by logged in user
-        Set<MessagesEntity> twoUsersMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(senderUserEntity, friendsUserEntity.getId(), new Long(4));
-
-        // add messages sent by friend
-        Set<MessagesEntity> newReceivedMessages = messagesRepositoryDAO.findAllBySenderAndReceiverIdAndReceiverType(friendsUserEntity, senderUserEntity.getId(), new Long(4));
-        for (MessagesEntity x : newReceivedMessages) {
-            if (x.getRedFlag().equals(new Long(0))) {
-                x.setRedFlag(new Long(1));
-                messagesRepositoryDAO.save(x);}
-        }
-
-        twoUsersMessages.addAll(newReceivedMessages);
-
-        // reduce data and don't share passowrds etc.
-        for (MessagesEntity y : twoUsersMessages) {
-            y.getSender().setPassword(null); y.getSender().setContactInfo(null); y.getSender().setPublicProfile(null);
-            y.getSender().setCreated(null); y.getSender().setRelationshipStatus(null); y.getSender().setOccupation(null);
-            y.getSender().setBlurb(null); y.getSender().setLocation(null); y.getSender().setTitle(null);
-            y.getSender().setEducation(null);
-        }
-
-        return ResponseEntity.ok(twoUsersMessages);
+        List<MessagesEntity> twoFriendsMessages = messagesEntityService.getTwoFriendMessages( userEntity, friendsUserEntity, pageNo);
+        return ResponseEntity.ok(twoFriendsMessages);
     }
 
     // GET Alerts. list of contacts with messages not yet read.

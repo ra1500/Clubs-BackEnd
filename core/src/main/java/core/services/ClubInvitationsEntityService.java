@@ -70,7 +70,7 @@ public class ClubInvitationsEntityService {
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
 
         // validation. ensure not duplicate invitation (status could be 'declined' or 'accepted'. so no dups in db not valid check).
-        if ( clubInvitationsRepositoryDAO.findOneBySenderAndReceiverAndClub(foundUserEntity, receiverUserEntity.getUserName(), foundClubsEntity) != null ) { clubInvitationsEntityDto.setReceiver("error. invitation already previously sent"); return clubInvitationsEntityDto; };
+        if ( clubInvitationsRepositoryDAO.findOneBySenderAndReceiverAndClub(foundUserEntity, receiverUserEntity.getUserName(), foundClubsEntity) != null ) { clubInvitationsEntityDto.setReceiver("You already invited this user before!"); return clubInvitationsEntityDto; };
 
         // check if club already full or not.
         Long maxSize = foundClubsEntity.getMaxSize();
@@ -84,14 +84,13 @@ public class ClubInvitationsEntityService {
         if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { clubInvitationsEntityDto.setReceiver("error. user not in club"); return clubInvitationsEntityDto; };
 
         // validation. no invitation to self
-        if ( clubInvitationsEntityDto.getReceiver().equals(user) ) { clubInvitationsEntityDto.setReceiver("error. self-invitation"); return clubInvitationsEntityDto; };
+        if ( clubInvitationsEntityDto.getReceiver().equals(user) ) { clubInvitationsEntityDto.setReceiver("But you're already in the club..."); return clubInvitationsEntityDto; };
 
         // validation. is receiver already in club?
-        if ( foundClubsEntity.getMembers().contains(receiverUserEntity) ) { clubInvitationsEntityDto.setReceiver("error. user is already a member"); return clubInvitationsEntityDto; };
+        if ( foundClubsEntity.getMembers().contains(receiverUserEntity) ) { clubInvitationsEntityDto.setReceiver("They are already in the club!"); return clubInvitationsEntityDto; };
 
         // validation. not a duplicate invitation (sender, receiver, clubId)
-
-
+        //TODO:
         // validation. currently, more than one invitation for same club can be produced if from different sender)
 
         // add the sender's UserEntity

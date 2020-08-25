@@ -322,6 +322,8 @@ public class UserEntityController extends AbstractRestController {
         String user = values[0];
         String password = values[1];
 
+        if ( userEntityDto.getPassword().length() < 8 ) { return ResponseEntity.ok(userEntityDto); } // break if new password not at least 8 characters.
+
         if (userEntityDto.getUserName().equals(password)) { // this is a lame security check. front-end put 'old' password in as 'userName' as a security check, even though it is available in the sessionStorage.
             UserEntityDto patchedUserEntityDto = userEntityService.patchPasswordUserEntity(user, password, userEntityDto.getPassword());
             userEntityDto.setFriendsSet(null);

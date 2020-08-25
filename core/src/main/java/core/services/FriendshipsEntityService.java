@@ -36,6 +36,9 @@ public class FriendshipsEntityService {
     // POST/PATCH a friendship (double entry of friendships(qty 2) + double entry of adding parent to child, and child to Set in parent)
     public FriendshipsEntityDto createFriendshipsEntity(final FriendshipsEntityDto friendshipsEntityDto, final String userName) {
 
+        // validation. cannot invite self.
+        if ( friendshipsEntityDto.getFriend().equals(userName) ) { return friendshipsEntityDto; }
+
         // get friendshipsEntity from db, if it exists.
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
         Long userId = foundUserEntity.getId();
@@ -130,6 +133,44 @@ public class FriendshipsEntityService {
         return friendshipsEntityDtoTransformer.generate(foundFriendshipsEntity);
         }
     }
+
+    // POST update a friendshipsEntity when accept/decline invitation
+    //public FriendshipsEntityDto acceptDeclineFriendshipsEntity(final FriendshipsEntityDto friendshipsEntityDto, final String user) {
+
+        // get friendshipsEntity from db, if it exists.
+       // UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
+       // FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneById(friendshipsEntityDto.getId());
+
+        // validation. does friendship actually exist
+       // if (foundFriendshipsEntity == null) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Not found."); return errFriendshiipsEntity; };
+        // validation. invitee/friend is indeed user
+       // if ( !foundFriendshipsEntity.getFriend().equals(user) ) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Invalid update."); return errFriendshiipsEntity; };
+
+            // update user's FriendshipsEntity to accept or decline
+      //      foundFriendshipsEntity.setConnectionStatus(friendshipsEntityDto.getConnectionStatus());
+      //      friendshipsRepositoryDAO.save(foundFriendshipsEntity);
+
+    //}
+
+
+
+
+
+    // POST update friendships connectionType
+    public FriendshipsEntityDto updateConnectionType(final FriendshipsEntityDto friendshipsEntityDto, final String userName) {
+
+        // get friendshipsEntity from db, if it exists.
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
+        Long userId = foundUserEntity.getId();
+        FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneByUserEntityIdAndId(userId, friendshipsEntityDto.getId());
+
+        // validation. friendships entity must exist properly.
+        if ( foundFriendshipsEntity == null ) { FriendshipsEntityDto errFriendshipsEntity = new FriendshipsEntityDto(); errFriendshipsEntity.setConnectionType("error"); return errFriendshipsEntity; };
+
+        foundFriendshipsEntity.setConnectionType(friendshipsEntityDto.getConnectionType());
+        friendshipsRepositoryDAO.save(foundFriendshipsEntity);
+        return friendshipsEntityDtoTransformer.generate(foundFriendshipsEntity);
+     }
 
     // for DELETE.
     public Integer deleteFriendshipsEntity(final Long id) {

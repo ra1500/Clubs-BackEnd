@@ -114,6 +114,7 @@ public class ClubInvitationsEntityService {
 
         // get the invitation
         ClubInvitationsEntity foundClubInvitationEntity = clubInvitationsRepositoryDAO.findOneById(clubInvitationsEntityDto.getId());
+        if ( foundClubInvitationEntity ==  null ) { return clubInvitationsEntityDto; };
 
         // validate that user and receiver are the same
         if (!foundClubInvitationEntity.getReceiver().equals(userName)) { return clubInvitationsEntityDto; };
@@ -128,12 +129,12 @@ public class ClubInvitationsEntityService {
 
             // validation. is user already in club? (if so, then just break and return the foundClubInvitationEntity).
             ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
-            if ( foundClubsEntity.getMembers().contains(foundUserEntity) ) { return clubInvitationsEntityDto; };
+            if ( foundClubsEntity.getMembers().contains(foundUserEntity) ) { clubInvitationsEntityDto.setReceiver("User is already in the club"); return clubInvitationsEntityDto; };
 
             // check that user is under max.# of clubs can join
             Integer countOfClubsJoined = foundUserEntity.getClubs().size();
             if ( countOfClubsJoined > 30 ) {
-                clubInvitationsEntityDto.setReceiver("OVER LIMIT");
+                clubInvitationsEntityDto.setReceiver("You're already at your maximum allowable club memberhsips.");
                 return clubInvitationsEntityDto; }
 
             //ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
@@ -142,7 +143,7 @@ public class ClubInvitationsEntityService {
             Integer membersCount = members.size();
 
             // check if club full or not (under max #users). break if true.
-            if ( membersCount >= maxSize ) { return clubInvitationsEntityDto; };
+            if ( membersCount >= maxSize ) { clubInvitationsEntityDto.setReceiver("Sorry, club is already full."); return clubInvitationsEntityDto; };
 
             members.add(foundUserEntity);
             foundClubsEntity.setMembers(members);
@@ -156,6 +157,10 @@ public class ClubInvitationsEntityService {
             votesRepositoryDAO.saveAndFlush(newAlphaVote);
 
             foundUserEntity.getClubs().add(foundClubsEntity);
+
+            // increment the currentSize of the club
+            foundClubsEntity.setCurrentSize(foundClubsEntity.getCurrentSize()+new Long(1));
+
             clubsRepositoryDAO.save(foundClubsEntity);
             userRepositoryDAO.save(foundUserEntity);
         }

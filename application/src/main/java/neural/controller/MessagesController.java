@@ -80,6 +80,7 @@ public class MessagesController extends AbstractRestController {
         // validation. User is indeed in club.
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubsEntityId);
+        if ( foundClubsEntity ==  null ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         Set<UserEntity> foundUserSet = foundClubsEntity.getMembers();
         if ( !foundUserSet.contains(foundUserEntity) ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
 

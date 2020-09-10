@@ -49,4 +49,7 @@ public interface MessagesRepositoryDAO extends JpaRepository<MessagesEntity, Lon
 
     @Transactional
     Integer deleteOneById(Long id);
+
+    @Transactional
+    Integer deleteAllByClubName(String clubName);
 }

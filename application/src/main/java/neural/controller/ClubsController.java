@@ -66,9 +66,9 @@ public class ClubsController extends AbstractRestController {
 
         // validation. in service.
 
-        clubsEntityService.userQuitClub(user, clubId);
+        String quitClubMessage = clubsEntityService.userQuitClub(user, clubId);
 
-        String quitClubMessage = "quit club command";
+        //String quitClubMessage = "Club removed.";
         return ResponseEntity.ok(quitClubMessage);
     }
 

@@ -6,6 +6,7 @@ import db.entity.UserEntity;
 import db.entity.VoteCountsClubAlpha;
 import db.entity.VotesEntity;
 import db.repository.ClubsRepositoryDAO;
+import db.repository.MessagesRepositoryDAO;
 import db.repository.UserRepositoryDAO;
 import db.repository.VotesRepositoryDAO;
 import model.ClubsEntityDto;
@@ -25,13 +26,15 @@ public class ClubsEntityService {
     private final ClubsEntityDtoTransformer clubsEntityDtoTransformer;
     private final UserRepositoryDAO userRepositoryDAO;
     private final VotesRepositoryDAO votesRepositoryDAO;
+    private final MessagesRepositoryDAO messagesRepositoryDAO;
 
     public ClubsEntityService(final ClubsRepositoryDAO clubsRepositoryDAO,
-                                  final ClubsEntityDtoTransformer clubsEntityDtoTransformer, final UserRepositoryDAO userRepositoryDAO, VotesRepositoryDAO votesRepositoryDAO) {
+                                  final ClubsEntityDtoTransformer clubsEntityDtoTransformer, final UserRepositoryDAO userRepositoryDAO, VotesRepositoryDAO votesRepositoryDAO, MessagesRepositoryDAO messagesRepositoryDAO) {
         this.clubsRepositoryDAO = clubsRepositoryDAO;
         this.clubsEntityDtoTransformer = clubsEntityDtoTransformer;
         this.userRepositoryDAO = userRepositoryDAO;
         this.votesRepositoryDAO = votesRepositoryDAO;
+        this.messagesRepositoryDAO = messagesRepositoryDAO;
     }
 
     // GET
@@ -71,6 +74,7 @@ public class ClubsEntityService {
         newMembersSet.add(foundUserEntity);
         clubsEntityDto.setMembers(newMembersSet);
         clubsEntityDto.setFounder(userName);
+        clubsEntityDto.setCurrentSize(new Long(1));
 
         if (clubsEntityDto.getMaxSize().equals(null)) { clubsEntityDto.setMaxSize(new Long(20)); };
         try {
@@ -135,8 +139,14 @@ public class ClubsEntityService {
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
 
+        // validation. if club not found, break out.
+        if ( foundClubsEntity == null ) { return "Club not found"; };
+
         // validation. ensure user is indeed in club.
         if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return "error. user is not in club"; };
+
+        // delete all votes by user in club
+        votesRepositoryDAO.deleteAllByVoterAndClub(foundUserEntity, foundClubsEntity);
 
         // remove user from the club
         Set<UserEntity> foundUserEntitySet = foundClubsEntity.getMembers();
@@ -148,16 +158,33 @@ public class ClubsEntityService {
         foundUserClubSet.removeIf(i -> i.getId().equals(clubId));
         foundUserEntity.setClubs(foundUserClubSet);
 
-        // delete all votes by user in club
-        votesRepositoryDAO.deleteAllByVoter(foundUserEntity.getId());
-
         // update the club's currentSize
-        foundClubsEntity.setCurrentSize(foundClubsEntity.getCurrentSize() - 1);
+        foundClubsEntity.setCurrentSize(new Long(foundClubsEntity.getMembers().size()));
 
-        // update the club's alpha to the beta
+        // delete the club if no more members remain
+        if ( foundClubsEntity.getCurrentSize() < 1 ) {
+            clubsRepositoryDAO.deleteOneById(clubId);
+            userRepositoryDAO.save(foundUserEntity);
+            messagesRepositoryDAO.deleteAllByClubName(foundClubsEntity.getClubName());
+            // TODO: delete all msgs between club members.
+            return "Club removed.";
+        }
+
+        else {
+
+        // update alpha.
+
+        // if only one member now remains, assign alpha to that person.
+        if ( foundClubsEntity.getMembers().size() == 1 ) {
+            for (UserEntity x : foundClubsEntity.getMembers()  ) {
+                foundClubsEntity.setAlpha(x.getUserName());
+            };
+        };
+
+         // if quitting member is aplpha. switch to beta.
         if ( foundClubsEntity.getMembers().size() > 1 ) {
             String[] voteCountsClubAlphas = votesRepositoryDAO.getAlphaVoteCounts(clubId);
-            Set<VoteCountsClubAlpha>  setOfVotes = new HashSet<>();
+            Set<VoteCountsClubAlpha> setOfVotes = new HashSet<>();
 
             for (String x : voteCountsClubAlphas) {
                 String[] y = x.split(",");
@@ -183,15 +210,13 @@ public class ClubsEntityService {
             foundClubsEntity.setAlpha(beta);
         }; // end if
 
-        // delete the club if after quiting there are zero members.
-        //if ( foundClubsEntity.getMembers().size() < 1 ) { clubsRepositoryDAO.deleteOneById(clubId); };
-        // delete messages in the club, and between club members.
-
         userRepositoryDAO.save(foundUserEntity);
         clubsRepositoryDAO.save(foundClubsEntity);
 
-        String userRemoved = "user removed from club";
+        String userRemoved = "Club removed.";
         return userRemoved;
+
+        } // end else
     }
 
 }

@@ -38,7 +38,7 @@ public class ClubsEntity implements Serializable {
     private Long maxSize;
 
     @Column(length=3)
-    private Long currentSize;
+    private Long currentSize = new Long(0);
 
     @Column
     private String alpha; // leader of club. can edit club and remove members

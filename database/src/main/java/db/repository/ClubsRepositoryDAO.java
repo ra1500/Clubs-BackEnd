@@ -18,4 +18,5 @@ public interface ClubsRepositoryDAO extends JpaRepository<ClubsEntity, Long> {
 
     @Transactional
     Integer deleteOneById(Long id);
+
 }

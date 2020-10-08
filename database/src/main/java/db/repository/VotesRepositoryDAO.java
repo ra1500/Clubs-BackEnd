@@ -31,4 +31,7 @@ public interface VotesRepositoryDAO extends JpaRepository<VotesEntity, Long> {
 
     @Transactional
     Integer deleteAllByVoterAndClub(UserEntity user, ClubsEntity club);
+
+    @Transactional
+    Integer deleteAllByVoteCastAndClubAndVoteType(String voteCast, ClubsEntity club, Long voteType);
 }

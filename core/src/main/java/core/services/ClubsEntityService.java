@@ -148,6 +148,9 @@ public class ClubsEntityService {
         // delete all votes by user in club
         votesRepositoryDAO.deleteAllByVoterAndClub(foundUserEntity, foundClubsEntity);
 
+        // delete all alpha votes that voted for this user
+        votesRepositoryDAO.deleteAllByVoteCastAndClubAndVoteType(foundUserEntity.getUserName(), foundClubsEntity, new Long(1));
+
         // remove user from the club
         Set<UserEntity> foundUserEntitySet = foundClubsEntity.getMembers();
         foundUserEntitySet.removeIf(i -> i.getUserName().equals(userName));
@@ -171,17 +174,16 @@ public class ClubsEntityService {
         }
 
         else {
-
         // update alpha.
 
-        // if only one member now remains, assign alpha to that person.
+        // if only one member now remains, assign alpha to that user.
         if ( foundClubsEntity.getMembers().size() == 1 ) {
             for (UserEntity x : foundClubsEntity.getMembers()  ) {
                 foundClubsEntity.setAlpha(x.getUserName());
             };
         };
 
-         // if quitting member is aplpha. switch to beta.
+         // recalculate the alpha after vote was removed. then, if alpha is the quitting member, switch to beta.
         if ( foundClubsEntity.getMembers().size() > 1 ) {
             String[] voteCountsClubAlphas = votesRepositoryDAO.getAlphaVoteCounts(clubId);
             Set<VoteCountsClubAlpha> setOfVotes = new HashSet<>();
@@ -191,13 +193,31 @@ public class ClubsEntityService {
                 setOfVotes.add(new VoteCountsClubAlpha( y[0], new Integer(y[1]) ));
             }
 
-            // remove the alpha before getting the beta.
-            setOfVotes.removeIf(i -> i.getVoteCast().equals(foundClubsEntity.getAlpha()));
-
-            // get the beta. note if there is a tie in beta counts, this will just grab one from 'random' order in the Set.
-            // maxCount must be > than 1 in order overcome the alpha
+            // recalculate the alpha
             int maxCount = 0;
             int currentCount;
+            String alpha = "";
+            for (VoteCountsClubAlpha x : setOfVotes ) {
+                currentCount = x.getCountVotesCast();
+                if (currentCount > maxCount) {
+                    maxCount = currentCount;
+                    alpha = x.getVoteCast();
+                }
+            }
+
+            // set the revised alpha (if new alpha is also not the quitting user)
+            if ( !foundClubsEntity.getAlpha().equals(alpha) && !foundUserEntity.getUserName().equals(alpha) ) {
+                foundClubsEntity.setAlpha(alpha);
+                clubsRepositoryDAO.save(foundClubsEntity);
+            }
+
+            else if ( foundUserEntity.getUserName().equals(alpha) ) {
+            // remove the alpha before getting the beta.
+            setOfVotes.removeIf(i -> i.getVoteCast().equals(foundClubsEntity.getAlpha()));
+            // get the beta. note if there is a tie in beta counts, this will just grab one from 'random' order in the Set.
+            // maxCount must be > than 1 in order overcome the alpha
+            maxCount = 0;
+            //currentCount;
             String beta = "";
             for (VoteCountsClubAlpha x : setOfVotes ) {
                 currentCount = x.getCountVotesCast();
@@ -208,6 +228,7 @@ public class ClubsEntityService {
             }
 
             foundClubsEntity.setAlpha(beta);
+            }; // end 'else if'
         }; // end if
 
         userRepositoryDAO.save(foundUserEntity);

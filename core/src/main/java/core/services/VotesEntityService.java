@@ -60,7 +60,34 @@ public class VotesEntityService {
         VotesEntity foundVotesEntity = votesRepositoryDAO.findOneByVoterAndVoteTypeAndClub(foundUserEntity, new Long(1), foundClubsEntity);
         if (foundVotesEntity != null) {
             foundVotesEntity.setVoteCast(votesEntityDto.getVoteCast());
+
+            // save the vote before it is counted in the coup d'etat below
             votesRepositoryDAO.save(foundVotesEntity);
+
+            // COUP D'ETAT - update alpha if vote changes majority of alpha votes
+            String[] voteCountsClubAlphas = votesRepositoryDAO.getAlphaVoteCounts(foundClubsEntity.getId());
+            Set<VoteCountsClubAlpha> setOfVotes = new HashSet<>();
+
+            for (String x : voteCountsClubAlphas) {
+                String[] y = x.split(",");
+                setOfVotes.add(new VoteCountsClubAlpha( y[0], new Integer(y[1]) ));
+            }
+
+            int maxCount = 0;
+            int currentCount;
+            String alpha = "";
+            for (VoteCountsClubAlpha x : setOfVotes ) {
+                currentCount = x.getCountVotesCast();
+                if (currentCount > maxCount) {
+                    maxCount = currentCount;
+                    alpha = x.getVoteCast();
+                }
+            }
+            if ( !foundClubsEntity.getAlpha().equals(alpha) ) {
+                foundClubsEntity.setAlpha(alpha);
+                clubsRepositoryDAO.save(foundClubsEntity);
+            };
+
             return votesEntityDtoTransformer.generate(foundVotesEntity);
         }
         else {
@@ -73,31 +100,8 @@ public class VotesEntityService {
         VotesEntity savedVotesEntity = votesRepositoryDAO.saveAndFlush(votesEntityDtoTransformer.generate(votesEntityDto));
 
         // add the vote to the club's set of votes
+        // note this does not invoke 'coup d'etat' since the default vote is the current alpha.
         foundClubsEntity.getVotes().add(savedVotesEntity);
-
-        // COUP D'ETAT - update alpha if vote changes majority of alpha votes
-        String[] voteCountsClubAlphas = votesRepositoryDAO.getAlphaVoteCounts(foundClubsEntity.getId());
-        Set<VoteCountsClubAlpha> setOfVotes = new HashSet<>();
-
-        for (String x : voteCountsClubAlphas) {
-            String[] y = x.split(",");
-            setOfVotes.add(new VoteCountsClubAlpha( y[0], new Integer(y[1]) ));
-        }
-
-        int maxCount = 0;
-        int currentCount;
-        String alpha = "";
-        for (VoteCountsClubAlpha x : setOfVotes ) {
-            currentCount = x.getCountVotesCast();
-            if (currentCount > maxCount) {
-                maxCount = currentCount;
-                alpha = x.getVoteCast();
-            }
-        }
-        if ( !foundClubsEntity.getAlpha().equals(alpha) ) {
-            foundClubsEntity.setAlpha(alpha);
-            clubsRepositoryDAO.save(foundClubsEntity);
-        };
 
         return votesEntityDtoTransformer.generate(savedVotesEntity);
         }

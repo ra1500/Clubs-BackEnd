@@ -33,90 +33,108 @@ public class FriendshipsEntityService {
         return friendshipsEntityDtoTransformer.generate(friendshipsRepositoryDAO.findOneByIdAndUserEntityId(friendId, userEntityId));
     }
 
-    // POST/PATCH a friendship (double entry of friendships(qty 2) + double entry of adding parent to child, and child to Set in parent)
+    // POST a new friendship (double entry of friendships(qty 2)
     public FriendshipsEntityDto createFriendshipsEntity(final FriendshipsEntityDto friendshipsEntityDto, final String userName) {
 
         // validation. cannot invite self.
-        if ( friendshipsEntityDto.getFriend().equals(userName) ) { return friendshipsEntityDto; }
+        if (friendshipsEntityDto.getFriend().equals(userName)) { return friendshipsEntityDto; }
 
-        // get friendshipsEntity from db, if it exists.
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
-        Long userId = foundUserEntity.getId();
-        FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneByUserEntityIdAndId(userId, friendshipsEntityDto.getId());
-        if (friendshipsRepositoryDAO.findOneByUserEntityIdAndFriend(userId, friendshipsEntityDto.getFriend()) != null) { return friendshipsEntityDto; }; // break if friendship already exists. no duplicates.
 
-        // get friend userEntity if it exists
+        // validation. invitation is new and friendship does not already exist.
+        FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneByUserEntityIdAndId(foundUserEntity.getId(), friendshipsEntityDto.getId());
+        if (foundFriendshipsEntity != null) { return friendshipsEntityDto; }
+
+        // get friend userEntity if it exists. if does not exist, break with error.
         UserEntity friendExistsUserEntity = userRepositoryDAO.findOneByUserName(friendshipsEntityDto.getFriend());
+        if (friendExistsUserEntity == null) { return friendshipsEntityDto; }
 
-        if (foundFriendshipsEntity == null && friendExistsUserEntity != null ) {
+        // limit quantity of friendships
+        if (foundUserEntity.getFriendsSet().size() > 300) {
+            friendshipsEntityDto.setConnectionStatus("OVER LIMIT");
+            return friendshipsEntityDto; }
 
-            // limit quantity of friendships (this here only limits the invitations sent out, not total qty. of acceptances etc.)
-            if (foundUserEntity.getFriendsSet().size() > 300) {
-                friendshipsEntityDto.setConnectionStatus("OVER LIMIT");
-                return friendshipsEntityDto;
-            };
+        // create a new 'raw' friendshipsEntity (1 of 2 entries) (ManyToOne twice, instead of ManyToMany)
+        FriendshipsEntity newFriendshipsEntity1 = friendshipsEntityDtoTransformer.generate(friendshipsEntityDto);
 
-            // create a new 'raw' friendshipsEntity (1 of 2 entries) (ManyToOne twice, instead of ManyToMany)
-            FriendshipsEntity newFriendshipsEntity1 = friendshipsEntityDtoTransformer.generate(friendshipsEntityDto);
+        // add userEntity
+        newFriendshipsEntity1.setUserEntity(foundUserEntity);
 
-            // add userEntity
-            newFriendshipsEntity1.setUserEntity(foundUserEntity);
+        // save completed friendshipsEntity1
+        friendshipsRepositoryDAO.saveAndFlush(newFriendshipsEntity1);
 
-            // save completed friendshipsEntity1
-            friendshipsRepositoryDAO.saveAndFlush(newFriendshipsEntity1);
+        // create a new 'raw' friendshipsEntity (2 of 2 entries) (ManyToOne twice, instead of ManyToMany)
+        FriendshipsEntityDto friendshipsEntityDto2 = friendshipsEntityDto;
+        friendshipsEntityDto2.setFriend(userName);
+        FriendshipsEntity newFriendshipsEntity2 = friendshipsEntityDtoTransformer.generate(friendshipsEntityDto2);
 
-            // create a new 'raw' friendshipsEntity (2 of 2 entries) (ManyToOne twice, instead of ManyToMany)
-            FriendshipsEntityDto friendshipsEntityDto2 = friendshipsEntityDto;
-            friendshipsEntityDto2.setFriend(userName);
-            FriendshipsEntity newFriendshipsEntity2 = friendshipsEntityDtoTransformer.generate(friendshipsEntityDto2);
+        // add userEntity (of friend)
+        newFriendshipsEntity2.setUserEntity(friendExistsUserEntity);
 
-            // add userEntity (of friend)
-            newFriendshipsEntity2.setUserEntity(friendExistsUserEntity);
+        // save completed friendshipsEntity2
+        friendshipsRepositoryDAO.saveAndFlush(newFriendshipsEntity2);
 
-            // save completed friendshipsEntity2
-            friendshipsRepositoryDAO.saveAndFlush(newFriendshipsEntity2);
+        // return only the 'main' 1st entry friendhsipsEntity
+        return friendshipsEntityDtoTransformer.generate(newFriendshipsEntity1);
+    }
 
-            // add both new friendships to their respective user's friendships Lists
-            foundUserEntity.getFriendsSet().add(newFriendshipsEntity1);
-            friendExistsUserEntity.getFriendsSet().add(newFriendshipsEntity2);
+    // POST unremove a friendship (from 'removed' to either 'Connected' or 'pending').
+    public FriendshipsEntityDto unRemoveFriendshipsEntity(final FriendshipsEntityDto friendshipsEntityDto, final String user) {
 
-            // return only the 'main' 1st entry friendhsipsEntity
-            return friendshipsEntityDtoTransformer.generate(newFriendshipsEntity1);
-        }
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
+
+        // validation. friendship exists.
+        FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneById(friendshipsEntityDto.getId());
+        if (foundFriendshipsEntity == null) { return friendshipsEntityDto; }
+
+        // validation. friendshipsEntity belongs to user
+        if ( !foundFriendshipsEntity.getUserEntity().equals(foundUserEntity) ) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Invalid update."); return errFriendshiipsEntity; };
 
         // modify single-side. From 'removed' to 'pending' or 'Connected' (depending on friend's connection status with user).
-        else if (foundFriendshipsEntity.getConnectionStatus().equals("removed") && friendshipsEntityDto.getConnectionStatus().equals("Connected"))
-        {
+        if ( foundFriendshipsEntity.getConnectionStatus().equals("removed") ) {
             String secondUser = foundFriendshipsEntity.getFriend();
             Long friendId = userRepositoryDAO.findOneByUserName(secondUser).getId();
-            String friendsStatus = friendshipsRepositoryDAO.findOneByUserEntityIdAndFriend(friendId, userName).getConnectionStatus();
+            String friendsStatus = friendshipsRepositoryDAO.findOneByUserEntityIdAndFriend(friendId, user).getConnectionStatus();
 
             if (friendsStatus.equals("pending")) {
-            foundFriendshipsEntity.setConnectionStatus("pending");
-            friendshipsRepositoryDAO.save(foundFriendshipsEntity);
-            return friendshipsEntityDtoTransformer.generate(foundFriendshipsEntity);
-            }
-            else if (friendsStatus.equals("Connected")){
-                foundFriendshipsEntity.setConnectionStatus("Connected");
+                foundFriendshipsEntity.setConnectionStatus("pending");
+                foundFriendshipsEntity.setVisibilityPermission("Yes");
                 friendshipsRepositoryDAO.save(foundFriendshipsEntity);
                 return friendshipsEntityDtoTransformer.generate(foundFriendshipsEntity);
-            }
-            else  {  // if  friend is 'removed' then the only possibility is to make it 'pending' here.
+            } else if (friendsStatus.equals("Connected")) {
+                foundFriendshipsEntity.setConnectionStatus("Connected");
+                foundFriendshipsEntity.setVisibilityPermission("Yes");
+                friendshipsRepositoryDAO.save(foundFriendshipsEntity);
+                return friendshipsEntityDtoTransformer.generate(foundFriendshipsEntity);
+            } else {  // if  friend is 'removed' then the only possibility is to make it 'pending' here.
                 foundFriendshipsEntity.setConnectionStatus("pending");
+                foundFriendshipsEntity.setVisibilityPermission("Yes");
                 friendshipsRepositoryDAO.save(foundFriendshipsEntity);
                 return friendshipsEntityDtoTransformer.generate(foundFriendshipsEntity);
             }
         }
+        else { return friendshipsEntityDto; }
+    }
+
+    // POST remove a 'Connected' friendship.
+    public FriendshipsEntityDto removeFriendshipsEntity(final FriendshipsEntityDto friendshipsEntityDto, final String user) {
+
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
+
+        // validation. friendship exists.
+        FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneById(friendshipsEntityDto.getId());
+        if (foundFriendshipsEntity == null) { return friendshipsEntityDto; }
+
+        // validation. friendshipsEntity belongs to user
+        if ( !foundFriendshipsEntity.getUserEntity().equals(foundUserEntity) ) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Invalid update."); return errFriendshiipsEntity; };
 
         // modify single-side. From 'pending' or 'Connected' to 'remove'.
-        else {
-        foundFriendshipsEntity.setConnectionStatus(friendshipsEntityDto.getConnectionStatus());
-        //foundFriendshipsEntity.setConnectionType(friendshipsEntityDto.getConnectionType());  don't override to NULL. thus this is commented out.
-        foundFriendshipsEntity.setVisibilityPermission(friendshipsEntityDto.getVisibilityPermission());
+        foundFriendshipsEntity.setConnectionStatus("removed");
+        foundFriendshipsEntity.setVisibilityPermission("No");
         friendshipsRepositoryDAO.save(foundFriendshipsEntity);
         return friendshipsEntityDtoTransformer.generate(foundFriendshipsEntity);
-        }
     }
+
 
     // POST accept an invitation
     public FriendshipsEntityDto acceptFriendshipsEntity(final FriendshipsEntityDto friendshipsEntityDto, final String user) {
@@ -128,7 +146,7 @@ public class FriendshipsEntityService {
         // validation. does friendship actually exist
         if (foundFriendshipsEntity == null) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Not found."); return errFriendshiipsEntity; };
         // validation. invitee/friend is indeed user
-        if ( !foundFriendshipsEntity.getFriend().equals(user) ) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Invalid update."); return errFriendshiipsEntity; };
+        if ( !foundFriendshipsEntity.getUserEntity().equals(foundUserEntity) ) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Invalid update."); return errFriendshiipsEntity; };
 
         // update user's FriendshipsEntity to accept (limit qty of friendships).
         if (foundUserEntity.getFriendsSet().size() > 300) {
@@ -163,7 +181,7 @@ public class FriendshipsEntityService {
         // validation. does friendship actually exist
         if (foundFriendshipsEntity == null) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Not found."); return errFriendshiipsEntity; };
         // validation. invitee/friend is indeed user
-        if ( !foundFriendshipsEntity.getFriend().equals(user) ) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Invalid update."); return errFriendshiipsEntity; };
+        if ( !foundFriendshipsEntity.getUserEntity().equals(foundUserEntity) ) { FriendshipsEntityDto errFriendshiipsEntity = new FriendshipsEntityDto(); errFriendshiipsEntity.setConnectionStatus("Error. Invalid update."); return errFriendshiipsEntity; };
 
         // update user's FriendshipsEntity to decline
         foundFriendshipsEntity.setConnectionStatus("removed");

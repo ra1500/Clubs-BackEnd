@@ -51,9 +51,28 @@ public class FriendshipsEntityController extends AbstractRestController {
             return ResponseEntity.ok(savedFriendshipsEntityDto);
     }
 
-    // POST a friendship (amend an existing).
-    @RequestMapping(value = "/a", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<FriendshipsEntityDto> amendFriendshipsEntity(
+    // POST a friendship (amend an existing). NOT USED
+    //@RequestMapping(value = "/a", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    //public ResponseEntity<FriendshipsEntityDto> amendFriendshipsEntity(
+    //        @RequestHeader("Authorization") String token,
+    //        @Valid
+    //        @RequestBody
+    //        final FriendshipsEntityDto friendshipsEntityDto) {
+
+    //    String base64Credentials = token.substring("Basic".length()).trim();
+    //    byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+    //    String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+    //    final String[] values = credentials.split(":", 2);
+    //    String user = values[0];
+
+    //    FriendshipsEntityDto savedFriendshipsEntityDto = friendshipsEntityService.createFriendshipsEntity(friendshipsEntityDto, user);
+    //    return ResponseEntity.ok(savedFriendshipsEntityDto);
+    //}
+
+    // POST remove a friendship
+    @RequestMapping(value = "/e", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<FriendshipsEntityDto> removeFriendshipsEntity(
             @RequestHeader("Authorization") String token,
             @Valid
             @RequestBody
@@ -66,7 +85,26 @@ public class FriendshipsEntityController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        FriendshipsEntityDto savedFriendshipsEntityDto = friendshipsEntityService.createFriendshipsEntity(friendshipsEntityDto, user);
+        FriendshipsEntityDto savedFriendshipsEntityDto = friendshipsEntityService.removeFriendshipsEntity(friendshipsEntityDto, user);
+        return ResponseEntity.ok(savedFriendshipsEntityDto);
+    }
+
+    // POST un-remove a friendship and put back to Connected or pending.
+    @RequestMapping(value = "/f", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<FriendshipsEntityDto> unRemoveFriendshipsEntity(
+            @RequestHeader("Authorization") String token,
+            @Valid
+            @RequestBody
+            final FriendshipsEntityDto friendshipsEntityDto) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        FriendshipsEntityDto savedFriendshipsEntityDto = friendshipsEntityService.unRemoveFriendshipsEntity(friendshipsEntityDto, user);
         return ResponseEntity.ok(savedFriendshipsEntityDto);
     }
 

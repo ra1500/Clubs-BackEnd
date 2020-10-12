@@ -51,7 +51,7 @@ public class FriendshipsEntityController extends AbstractRestController {
             return ResponseEntity.ok(savedFriendshipsEntityDto);
     }
 
-    // POST a friendship (amend an existing). Acceptance, ...
+    // POST a friendship (amend an existing).
     @RequestMapping(value = "/a", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<FriendshipsEntityDto> amendFriendshipsEntity(
             @RequestHeader("Authorization") String token,
@@ -67,6 +67,44 @@ public class FriendshipsEntityController extends AbstractRestController {
         String user = values[0];
 
         FriendshipsEntityDto savedFriendshipsEntityDto = friendshipsEntityService.createFriendshipsEntity(friendshipsEntityDto, user);
+        return ResponseEntity.ok(savedFriendshipsEntityDto);
+    }
+
+    // POST. Accept an invitation to connect.
+    @RequestMapping(value = "/c", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<FriendshipsEntityDto> acceptFriendshipsEntity(
+            @RequestHeader("Authorization") String token,
+            @Valid
+            @RequestBody
+            final FriendshipsEntityDto friendshipsEntityDto) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        FriendshipsEntityDto savedFriendshipsEntityDto = friendshipsEntityService.acceptFriendshipsEntity(friendshipsEntityDto, user);
+        return ResponseEntity.ok(savedFriendshipsEntityDto);
+    }
+
+    // POST. Decline an invitation to connect.
+    @RequestMapping(value = "/d", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<FriendshipsEntityDto> declineFriendshipsEntity(
+            @RequestHeader("Authorization") String token,
+            @Valid
+            @RequestBody
+            final FriendshipsEntityDto friendshipsEntityDto) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        FriendshipsEntityDto savedFriendshipsEntityDto = friendshipsEntityService.declineFriendshipsEntity(friendshipsEntityDto, user);
         return ResponseEntity.ok(savedFriendshipsEntityDto);
     }
 

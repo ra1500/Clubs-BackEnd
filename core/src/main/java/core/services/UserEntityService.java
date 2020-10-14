@@ -152,8 +152,14 @@ public class UserEntityService {
         String friendUserName = foundFriendshipsEntity.getFriend();
         UserEntity friendUserEntity = userEntityRepository.findOneByUserName(friendUserName);
 
+        // TODO have hibernate manage the friendsSet instead of transformer
+
         // must go to transformer first. then reduce Set<FriendshipsEntity>.
         UserEntityDto foundUser = userEntityDtoTransformer.generate(friendUserEntity);
+
+        // if friend is set to 'Private' then do not return any contacts.
+        if ( foundUser.getPublicProfile().equals("Private") ) { foundUser.setFriendsSet(null); return foundUser; };
+
         Set<FriendshipsEntity> foundFriendshipsEntities2 = foundUser.getFriendsSet();
         foundFriendshipsEntities2.removeIf(i -> i.getConnectionStatus().equals("removed"));
         foundFriendshipsEntities2.removeIf(i -> i.getConnectionStatus().equals("pending"));

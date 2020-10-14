@@ -42,8 +42,8 @@ public class FriendshipsEntityService {
         UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(userName);
 
         // validation. invitation is new and friendship does not already exist.
-        FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneByUserEntityIdAndId(foundUserEntity.getId(), friendshipsEntityDto.getId());
-        if (foundFriendshipsEntity != null) { return friendshipsEntityDto; }
+        FriendshipsEntity foundFriendshipsEntity = friendshipsRepositoryDAO.findOneByUserEntityIdAndFriend(foundUserEntity.getId(), friendshipsEntityDto.getFriend());
+        if (foundFriendshipsEntity != null) { friendshipsEntityDto.setConnectionStatus("Connection already exists."); return friendshipsEntityDto; }
 
         // get friend userEntity if it exists. if does not exist, break with error.
         UserEntity friendExistsUserEntity = userRepositoryDAO.findOneByUserName(friendshipsEntityDto.getFriend());
@@ -59,6 +59,7 @@ public class FriendshipsEntityService {
 
         // add userEntity
         newFriendshipsEntity1.setUserEntity(foundUserEntity);
+        newFriendshipsEntity1.setVisibilityPermission("Yes");
 
         // save completed friendshipsEntity1
         friendshipsRepositoryDAO.saveAndFlush(newFriendshipsEntity1);

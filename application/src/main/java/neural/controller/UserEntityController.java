@@ -56,7 +56,7 @@ public class UserEntityController extends AbstractRestController {
         return ResponseEntity.ok(userEntityDto);
     }
 
-    // GET. friends of friend. a friend's userEntity (with friendships). Excludes removed & pending friends.
+    // GET. not used???
     @ApiOperation(value = "getUserEntity")
     @RequestMapping(value = "/q", method = RequestMethod.GET)
     public ResponseEntity<UserEntityDto> getFriendsUserEntitySansRemovedFriends(
@@ -74,6 +74,7 @@ public class UserEntityController extends AbstractRestController {
         userEntityDto.setClubsSet(null);
         userEntityDto.setPassword(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+        if (userEntityDto.getFriendsSet() ==  null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         if (userEntityDto.getFriendsSet().isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         return ResponseEntity.ok(userEntityDto);
     }
@@ -96,6 +97,7 @@ public class UserEntityController extends AbstractRestController {
         userEntityDto.setClubsSet(null);
         userEntityDto.setPassword(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+        if (userEntityDto.getFriendsSet() ==  null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         if (userEntityDto.getFriendsSet().isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         return ResponseEntity.ok(userEntityDto);
     }
@@ -117,6 +119,7 @@ public class UserEntityController extends AbstractRestController {
         userEntityDto.setClubsSet(null);
         userEntityDto.setPassword(null);
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+        if (userEntityDto.getFriendsSet() ==  null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         if (userEntityDto.getFriendsSet().isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         return ResponseEntity.ok(userEntityDto);
     }
@@ -209,8 +212,6 @@ public class UserEntityController extends AbstractRestController {
         userEntityDto.setBlurb(null);
         userEntityDto.setLocation(null);
         userEntityDto.setPublicProfile(null);
-
-
 
         if (userEntityDto == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
         return ResponseEntity.ok(userEntityDto);

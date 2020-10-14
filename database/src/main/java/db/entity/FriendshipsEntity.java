@@ -36,7 +36,8 @@ public class FriendshipsEntity implements Serializable {
     private String connectionType;
 
     @Column(length = 20)
-    private String visibilityPermission;
+    private String visibilityPermission; // not currently used. this should only be for a specific permission between two users.
+                                        // for general permissions of what can be seen of a user's profile, that should be held at the UserEntity (under publicProfile).
 
     @ManyToOne
     @JoinColumn(name = "userEntityId")

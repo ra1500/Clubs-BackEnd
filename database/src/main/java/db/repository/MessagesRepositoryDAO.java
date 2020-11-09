@@ -32,10 +32,10 @@ public interface MessagesRepositoryDAO extends JpaRepository<MessagesEntity, Lon
     Set<MessagesEntity> findAllBySenderAndReceiverIdAndReceiverType(UserEntity sender, Long receiverId, Long receiverType);
 
     @Query("SELECT m FROM MessagesEntity m WHERE (m.receiverId = :userId AND m.sender = :memberEntity AND m.receiverType = :receiverType) OR (m.receiverId = :memberId AND m.sender = :userEntity AND m.receiverType = :receiverType) ")
-    Slice<MessagesEntity> getMessagesBetweenTwoClubMembers(UserEntity userEntity, UserEntity memberEntity, Long userId, Long memberId, Long receiverType, Pageable paging);
+    Slice<MessagesEntity> getMessagesBetweenTwoClubMembers(@Param("userEntity") UserEntity userEntity, @Param("memberEntity") UserEntity memberEntity, @Param("userId") Long userId, @Param("memberId") Long memberId, @Param("receiverType") Long receiverType, Pageable paging);
 
     @Query("SELECT m FROM MessagesEntity m WHERE m.sender = :sender AND m.receiverId = :receiverId AND m.created > :yesterday ")
-    Set<MessagesEntity> getAllWithinOneDay(UserEntity sender, Long receiverId, Date yesterday);
+    Set<MessagesEntity> getAllWithinOneDay(@Param("sender") UserEntity sender, @Param("receiverId") Long receiverId, @Param("yesterday") Date yesterday);
 
     Set<MessagesEntity> findAllBySenderAndReceiverIdAndReceiverTypeAndClubName(UserEntity sender, Long receiverId, Long receiverType, String clubName);
 

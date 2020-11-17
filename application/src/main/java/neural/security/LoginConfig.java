@@ -79,6 +79,7 @@ public class LoginConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/user/pp*").permitAll() // public profile text
                 .antMatchers("/api/files/pp*").permitAll() // public profile image
                 .antMatchers("/api/*").permitAll() // Introduction page
+                .antMatchers("/api/g/a").permitAll() // sample game
                 .antMatchers("/*").permitAll() // homepage/index
                 .antMatchers("*.js", "*.jsx").permitAll()
                 .antMatchers("*.ico").permitAll()

@@ -32,13 +32,15 @@ public class GameController extends AbstractRestController {
             @RequestHeader("Authorization") String token,
             @RequestParam("g") final int gameSize) {
 
+        // game sizes
+
         // build the game here:
         int greenCells = gameSize * 65/100;
         int yellowCells = gameSize * 25/100;
         int redCells = gameSize - greenCells - yellowCells - 2; // -2 since need 1 for key and 1 for escape
         int gameExitkey = gameSize - 1;
         int  gameExit = gameSize;
-        double gameSizeDouble = new Double(gameSize);
+        double gameSizeDouble = (double) gameSize;
         int yAxisHeight = (int)Math.sqrt(gameSizeDouble/2);
         int xAxisLength = yAxisHeight * 2;
 
@@ -50,7 +52,7 @@ public class GameController extends AbstractRestController {
         // create all the game cells
         while ( index1 < gameSize ) {
             GameCell gameCell = new GameCell();
-            gameCell.setLocationNumber(new Long(index1+1));
+            gameCell.setLocationNumber((long) (index1 + 1));
             listGameCells.add(gameCell);
             index1++;
         };
@@ -60,18 +62,19 @@ public class GameController extends AbstractRestController {
 
         // assign a point value to each cell
         for (GameCell x : listGameCells  ) {
-            if (index2 < greenCells) { x.setPoints(new Long(1)); }
-            else if (index2 < greenCells + yellowCells) { x.setPoints(new Long(2)); }
-            else if (index2 < greenCells + yellowCells + redCells) { x.setPoints(new Long(3)); }
+            if (index2 < greenCells) { x.setPoints(new Long(1)); x.setType(new Long(1)); }
+            else if (index2 < greenCells + yellowCells) { x.setPoints(new Long(2)); x.setType(new Long(1));  }
+            else if (index2 < greenCells + yellowCells + redCells) { x.setPoints(new Long(3)); x.setType(new Long(1)); }
             else if (index2 == gameExitkey-1) { x.setPoints(new Long(-10)); x.setType(new Long(2)); }
-            else if (index2 == gameExit-1) { x.setPoints(new Long(0)); x.setType(new Long(3)); };
+            else if (index2 == gameExit-1) { x.setPoints(new Long(-999)); x.setType(new Long(3)); };
             index2++;
         };
 
         // return the list to its original order, thereby having randomized points assigned to each cell
         Collections.sort(listGameCells); // See implements Comparable and method override in the entity GameCell
 
-        // assign to each hexagon cell the wall directional indicators
+        // assign to each octagonal cell the wall directional indicators
+        Random random = new Random();
         for ( GameCell x : listGameCells ) {
 
             // down
@@ -96,9 +99,33 @@ public class GameController extends AbstractRestController {
             if (new Double(x.getLocationNumber()-1) % new Double(xAxisLength) == 0) { x.setLeftValue(new Long(0)); x.setUpLeftValue(new Long(0)); x.setDownLeftValue(new Long(0)); }; // left column, left indicators
             if ( new Double(x.getLocationNumber()) % new Double(xAxisLength) == 0) { x.setRightValue(new Long(0)); x.setUpRightValue(new Long(0)); x.setDownRightValue(new Long(0)); }; // right column, right indicators
 
-            // clean up the two special cases (key and escape)
+            // clean up the two special cases (key-10 and escape-999)
+            int randomPointsIndicator = random.nextInt(2) + 1; // 1,2 or 3
+
+            if ( x.getUpValue().equals(new Long(-10)) ) { x.setUpValue(new Long(randomPointsIndicator)); };
+            if ( x.getUpLeftValue().equals(new Long(-10)) ) { x.setUpLeftValue(new Long(randomPointsIndicator)); };
+            if ( x.getUpRightValue().equals(new Long(-10)) ) { x.setUpRightValue(new Long(randomPointsIndicator)); };
+            if ( x.getDownValue().equals(new Long(-10)) ) { x.setDownValue(new Long(randomPointsIndicator)); };
+            if ( x.getDownLeftValue().equals(new Long(-10)) ) { x.setDownLeftValue(new Long(randomPointsIndicator)); };
+            if ( x.getDownRightValue().equals(new Long(-10)) ) { x.setDownRightValue(new Long(randomPointsIndicator)); };
+            if ( x.getLeftValue().equals(new Long(-10)) ) { x.setLeftValue(new Long(randomPointsIndicator)); };
+            if ( x.getRightValue().equals(new Long(-10)) ) { x.setRightValue(new Long(randomPointsIndicator)); };
+
+            if ( x.getUpValue().equals(new Long(-999)) ) { x.setUpValue(new Long(randomPointsIndicator)); };
+            if ( x.getUpLeftValue().equals(new Long(-999)) ) { x.setUpLeftValue(new Long(randomPointsIndicator)); };
+            if ( x.getUpRightValue().equals(new Long(-999)) ) { x.setUpRightValue(new Long(randomPointsIndicator)); };
+            if ( x.getDownValue().equals(new Long(-999)) ) { x.setDownValue(new Long(randomPointsIndicator)); };
+            if ( x.getDownLeftValue().equals(new Long(-999)) ) { x.setDownLeftValue(new Long(randomPointsIndicator)); };
+            if ( x.getDownRightValue().equals(new Long(-999)) ) { x.setDownRightValue(new Long(randomPointsIndicator)); };
+            if ( x.getLeftValue().equals(new Long(-999)) ) { x.setLeftValue(new Long(randomPointsIndicator)); };
+            if ( x.getRightValue().equals(new Long(-999)) ) { x.setRightValue(new Long(randomPointsIndicator)); };
+
+            if ( x.getPoints().equals(new Long(-999)) ) { x.setPoints(new Long(0)); };
 
         };
+
+        // insert randomness into the indicators
+
 
         game.setGameCells(listGameCells);
         return ResponseEntity.ok(game);

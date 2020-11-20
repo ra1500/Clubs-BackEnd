@@ -125,7 +125,37 @@ public class GameController extends AbstractRestController {
         };
 
         // insert randomness into the indicators
+        for ( GameCell x : listGameCells ) {
 
+            // select 2 of 8 indicators in a cell to randomly change. (% chance an indicator change is thus 2/8 * 2/3 = 17%).
+            int indicator1 = random.nextInt(6) + 1;
+            int indicator2 = random.nextInt(6) + 1;
+            while ( indicator2 == indicator1 ) {
+                indicator2 = random.nextInt(2) + 1;
+            };
+
+            int randomPoints1 = random.nextInt(3) + 1;
+            int randomPoints2 = random.nextInt(3) + 1;
+
+            if ( indicator1 == 1 ) { x.setUpValue((long) randomPoints1); };
+            if ( indicator1 == 2 ) { x.setUpLeftValue((long) randomPoints1); };
+            if ( indicator1 == 3 ) { x.setUpRightValue((long) randomPoints1); };
+            if ( indicator1 == 4 ) { x.setDownValue((long) randomPoints1); };
+            if ( indicator1 == 5 ) { x.setDownLeftValue((long) randomPoints1); };
+            if ( indicator1 == 6 ) { x.setDownRightValue((long) randomPoints1); };
+            if ( indicator1 == 7 ) { x.setLeftValue((long) randomPoints1); };
+            if ( indicator1 == 8 ) { x.setRightValue((long) randomPoints1); };
+
+            if ( indicator1 == 1 ) { x.setUpValue((long) randomPoints2); };
+            if ( indicator1 == 2 ) { x.setUpLeftValue((long) randomPoints2); };
+            if ( indicator1 == 3 ) { x.setUpRightValue((long) randomPoints2); };
+            if ( indicator1 == 4 ) { x.setDownValue((long) randomPoints2); };
+            if ( indicator1 == 5 ) { x.setDownLeftValue((long) randomPoints2); };
+            if ( indicator1 == 6 ) { x.setDownRightValue((long) randomPoints2); };
+            if ( indicator1 == 7 ) { x.setLeftValue((long) randomPoints2); };
+            if ( indicator1 == 8 ) { x.setRightValue((long) randomPoints2); };
+
+        };
 
         game.setGameCells(listGameCells);
         return ResponseEntity.ok(game);

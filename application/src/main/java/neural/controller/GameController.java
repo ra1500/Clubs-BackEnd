@@ -32,8 +32,6 @@ public class GameController extends AbstractRestController {
             @RequestHeader("Authorization") String token,
             @RequestParam("g") final int gameSize) {
 
-        // game sizes
-
         // build the game here:
         int greenCells = gameSize * 65/100;
         int yellowCells = gameSize * 25/100;
@@ -126,7 +124,6 @@ public class GameController extends AbstractRestController {
 
         // insert randomness into the indicators
         for ( GameCell x : listGameCells ) {
-
             // select 2 of 8 indicators in a cell to randomly change. (% chance an indicator change is thus 2/8 * 2/3 = 17%).
             int indicator1 = random.nextInt(6) + 1;
             int indicator2 = random.nextInt(6) + 1;
@@ -154,12 +151,10 @@ public class GameController extends AbstractRestController {
             if ( indicator1 == 6 ) { x.setDownRightValue((long) randomPoints2); };
             if ( indicator1 == 7 ) { x.setLeftValue((long) randomPoints2); };
             if ( indicator1 == 8 ) { x.setRightValue((long) randomPoints2); };
-
         };
 
         game.setGameCells(listGameCells);
         return ResponseEntity.ok(game);
     }
-
 
 }

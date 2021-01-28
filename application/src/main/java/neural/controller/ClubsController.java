@@ -118,4 +118,42 @@ public class ClubsController extends AbstractRestController {
         return ResponseEntity.ok(savedClubsEntityDto);
     }
 
+    // GET alpha delete a member and member's messages
+    @RequestMapping(value = "/e", method = RequestMethod.GET)
+    public ResponseEntity<ClubsEntityDto> removeMember(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("cId") final Long clubId,
+            @RequestParam("mId") final Long memberId,
+            final ClubsEntityDto clubsEntityDto) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        ClubsEntityDto savedClubsEntityDto = clubsEntityService.removeMember(user, memberId, clubId);
+        return ResponseEntity.ok(savedClubsEntityDto);
+    }
+
+    // GET alpha delete a member and member's messages
+    @RequestMapping(value = "/f", method = RequestMethod.GET)
+    public ResponseEntity<ClubsEntityDto> changeAlpha(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("cId") final Long clubId,
+            @RequestParam("mId") final Long memberId,
+            final ClubsEntityDto clubsEntityDto) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        ClubsEntityDto savedClubsEntityDto = clubsEntityService.changeAlpha(user, memberId, clubId);
+        return ResponseEntity.ok(savedClubsEntityDto);
+    }
+
 }

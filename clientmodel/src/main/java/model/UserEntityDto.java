@@ -28,6 +28,9 @@ public class UserEntityDto implements Serializable {
     @JsonProperty("publicProfile")
     private String publicProfile;
 
+    @JsonProperty("creator")
+    private String creator;
+
     @JsonProperty("title")
     private String title;
 
@@ -97,6 +100,10 @@ public class UserEntityDto implements Serializable {
     public void setPublicProfile(String publicProfile) {
         this.publicProfile = publicProfile;
     }
+
+    public String getCreator() { return creator; }
+
+    public void setCreator(String creator) { this.creator = creator; }
 
     public String getTitle() {
         return title;

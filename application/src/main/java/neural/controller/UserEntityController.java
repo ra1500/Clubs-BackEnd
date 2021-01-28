@@ -282,28 +282,91 @@ public class UserEntityController extends AbstractRestController {
         else { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
     }
 
+    // GET count of users created by this user
+    @ApiOperation(value = "getCountofUsersCreated")
+    @RequestMapping(value = "/pc", method = RequestMethod.GET)
+    public ResponseEntity<UserEntity> getCountOfUsersCreated(
+            @RequestHeader("Authorization") String token)               {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        Long countOfCreatedByUser = userEntityRepository.countByUser(user);
+        UserEntity countUserEntity = new UserEntity();
+        countUserEntity.setRelationshipStatus(countOfCreatedByUser);
+
+        if (countOfCreatedByUser == null) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+        return ResponseEntity.ok(countUserEntity);
+    }
+
     // POST to add a new user
+    //@RequestMapping(value = "/signup",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    //public ResponseEntity<UserEntityDto> createUserEntity(
+    //        @Valid
+    //        @RequestBody
+    //        final UserEntityDto userEntityDto) {
+
+    //    if (userEntityDto.getUserName().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+    //   if (userEntityDto.getPassword().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+    //    if (userEntityRepository.findOneByUserName(userEntityDto.getUserName()) != null ) {
+    //        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    //    }
+     //       userEntityDto.setOccupation("");
+     //       userEntityDto.setEducation(new Long(5));
+      //      userEntityDto.setRelationshipStatus(new Long(3));
+      //      UserEntityDto savedUserEntityDto = userEntityService.createUserEntity(userEntityDto);
+
+     //       savedUserEntityDto.setId(null);
+     //       savedUserEntityDto.setCreated(null);
+     //       savedUserEntityDto.setPublicProfile(null);
+     //       savedUserEntityDto.setFriendsSet(null);
+     //       savedUserEntityDto.setClubsSet(null);
+
+     //   return ResponseEntity.ok(savedUserEntityDto);
+    // }
+
+
+
+    // POST to add a new user (with counter)
     @RequestMapping(value = "/signup",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserEntityDto> createUserEntity(
+            @RequestHeader("Authorization") String token,
             @Valid
             @RequestBody
             final UserEntityDto userEntityDto) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+        String password = values[1];
+
+        Long countOfCreatedByUser = userEntityRepository.countByUser(user);
+        if (countOfCreatedByUser > 49) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
 
         if (userEntityDto.getUserName().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         if (userEntityDto.getPassword().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
         if (userEntityRepository.findOneByUserName(userEntityDto.getUserName()) != null ) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
-            userEntityDto.setOccupation("");
-            userEntityDto.setEducation(new Long(5));
-            userEntityDto.setRelationshipStatus(new Long(3));
-            UserEntityDto savedUserEntityDto = userEntityService.createUserEntity(userEntityDto);
+        userEntityDto.setOccupation("");
+        userEntityDto.setEducation(new Long(5));
+        userEntityDto.setRelationshipStatus(new Long(3));
+        userEntityDto.setCreator(user);
+        UserEntityDto savedUserEntityDto = userEntityService.createUserEntity(userEntityDto);
 
-            savedUserEntityDto.setId(null);
-            savedUserEntityDto.setCreated(null);
-            savedUserEntityDto.setPublicProfile(null);
-            savedUserEntityDto.setFriendsSet(null);
-            savedUserEntityDto.setClubsSet(null);
+        savedUserEntityDto.setRelationshipStatus(countOfCreatedByUser);
+        savedUserEntityDto.setId(null);
+        savedUserEntityDto.setCreated(null);
+        savedUserEntityDto.setPublicProfile(null);
+        savedUserEntityDto.setCreator(null);
+        savedUserEntityDto.setFriendsSet(null);
+        savedUserEntityDto.setClubsSet(null);
 
         return ResponseEntity.ok(savedUserEntityDto);
     }

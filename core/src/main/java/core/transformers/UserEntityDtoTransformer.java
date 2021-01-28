@@ -40,6 +40,7 @@ public class UserEntityDtoTransformer {
         dto.setUserName(userEntity.getUserName());
         dto.setPassword(userEntity.getPassword());
         dto.setPublicProfile(userEntity.getPublicProfile());
+        dto.setCreator(userEntity.getCreator());
         dto.setTitle(userEntity.getTitle());
         dto.setBlurb(userEntity.getBlurb());
         dto.setEducation(userEntity.getEducation());
@@ -54,7 +55,7 @@ public class UserEntityDtoTransformer {
 
     // POST
     public UserEntity generate(final UserEntityDto dto) {
-        return new UserEntity(dto.getUserName(),dto.getPassword(), dto.getPublicProfile());
+        return new UserEntity(dto.getUserName(),dto.getPassword(), dto.getPublicProfile(), dto.getCreator());
     }
 
     // PATCH to the db an update

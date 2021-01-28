@@ -37,6 +37,9 @@ public class ClubsEntityDtoTransformer {
         if ( clubsEntity.getMaxSize().equals(null) ) { dto.setCurrentSize(new Long(20)); }
         else { dto.setCurrentSize( clubsEntity.getCurrentSize()); };
         dto.setAlpha(clubsEntity.getAlpha());
+        dto.setHeadline1(clubsEntity.getHeadline1());
+        dto.setHeadline2(clubsEntity.getHeadline2());
+        dto.setHeadline3(clubsEntity.getHeadline3());
         dto.setMembers(clubsEntity.getMembers());
         dto.setVotes(clubsEntity.getVotes());
 
@@ -62,6 +65,9 @@ public class ClubsEntityDtoTransformer {
                 dto.getMaxSize(),
                 dto.getCurrentSize(),
                 dto.getAlpha(),
+                dto.getHeadline1(),
+                dto.getHeadline2(),
+                dto.getHeadline3(),
                 dto.getMembers(),
                 dto.getVotes()
         );

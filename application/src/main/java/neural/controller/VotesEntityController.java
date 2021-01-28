@@ -139,25 +139,25 @@ public class VotesEntityController extends AbstractRestController {
     }
 
     // POST or update a new/existing vote
-    @RequestMapping(value = "/b{cId}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<VotesEntityDto> createVotesEntity(
-            @Valid
-            @RequestBody final VotesEntityDto votesEntityDto,
-            @RequestHeader("Authorization") String token,
-            @RequestParam("cId") final Long clubId) {
+    //@RequestMapping(value = "/b{cId}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    //public ResponseEntity<VotesEntityDto> createVotesEntity(
+    //        @Valid
+    //        @RequestBody final VotesEntityDto votesEntityDto,
+    //        @RequestHeader("Authorization") String token,
+    //        @RequestParam("cId") final Long clubId) {
 
-        String base64Credentials = token.substring("Basic".length()).trim();
-        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
-        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+    //    String base64Credentials = token.substring("Basic".length()).trim();
+    //    byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+    //    String credentials = new String(credDecoded, StandardCharsets.UTF_8);
         // credentials = username:password
-        final String[] values = credentials.split(":", 2);
-        String user = values[0];
+    //    final String[] values = credentials.split(":", 2);
+    //    String user = values[0];
 
-        VotesEntityDto savedVotesEntityDto = votesEntityService.createVotesEntity(votesEntityDto, user, clubId);
+    //    VotesEntityDto savedVotesEntityDto = votesEntityService.createVotesEntity(votesEntityDto, user, clubId);
 
-        savedVotesEntityDto.setVoter(null);
+    //    savedVotesEntityDto.setVoter(null);
 
-        return ResponseEntity.ok(savedVotesEntityDto);
-    }
+     //   return ResponseEntity.ok(savedVotesEntityDto);
+    //}
 
 }

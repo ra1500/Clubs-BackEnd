@@ -32,6 +32,9 @@ public class UserEntity implements Serializable {
     @Column (length = 20)
     private String publicProfile; // not boolean. permission for viewing user's public profile page on internet.
 
+    @Column
+    private String creator;
+
     @Column (length = 100)
     private String title;
 
@@ -76,6 +79,14 @@ public class UserEntity implements Serializable {
         this.publicProfile = publicProfile;
     }
 
+    public UserEntity (String userName, String password, String publicProfile, String creator) {
+        super();
+        this.userName = userName;
+        this.password = password;
+        this.publicProfile = publicProfile;
+        this.creator = creator;
+    }
+
     public UserEntity (String userName, String password) {
         super();
         this.userName = userName;
@@ -116,6 +127,10 @@ public class UserEntity implements Serializable {
     public void setPublicProfile(String publicProfile) {
         this.publicProfile = publicProfile;
     }
+
+    public String getCreator() { return creator; }
+
+    public void setCreator(String creator) { this.creator = creator; }
 
     public String getTitle() {
         return title;

@@ -13,4 +13,7 @@ public interface UserRepositoryDAO extends JpaRepository<UserEntity, Long> {
     UserEntity findOneByUserName(String userName);
     UserEntity findOneById(Long id);
 
+
+    @Query("SELECT COUNT(a) FROM UserEntity a WHERE creator = :user")
+    Long countByUser(@Param("user")String user);
 }

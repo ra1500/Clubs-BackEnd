@@ -43,6 +43,15 @@ public class ClubsEntity implements Serializable {
     @Column
     private String alpha; // leader of club. can edit club and remove members
 
+    @Column
+    private String headline1;
+
+    @Column
+    private String headline2;
+
+    @Column
+    private String headline3;
+
     @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "UserEntityId")
@@ -77,6 +86,22 @@ public class ClubsEntity implements Serializable {
         this.maxSize = maxSize;
         this.currentSize = currentSize;
         this.alpha = alpha;
+        this.members = members;
+        this.votes = votes;
+    }
+
+    public ClubsEntity(Long id, Date created, String clubName, String founder, String description, Long maxSize, Long currentSize, String alpha, String headline1, String headline2, String headline3, Set<UserEntity> members, Set<VotesEntity> votes) {
+        this.id = id;
+        this.created = created;
+        this.clubName = clubName;
+        this.founder = founder;
+        this.description = description;
+        this.maxSize = maxSize;
+        this.currentSize = currentSize;
+        this.alpha = alpha;
+        this.headline1 = headline1;
+        this.headline2 = headline2;
+        this.headline3 = headline3;
         this.members = members;
         this.votes = votes;
     }
@@ -136,6 +161,18 @@ public class ClubsEntity implements Serializable {
     public void setAlpha(String alpha) {
         this.alpha = alpha;
     }
+
+    public String getHeadline1() { return headline1; }
+
+    public void setHeadline1(String headline1) { this.headline1 = headline1; }
+
+    public String getHeadline2() { return headline2; }
+
+    public void setHeadline2(String headline2) { this.headline2 = headline2; }
+
+    public String getHeadline3() { return headline3; }
+
+    public void setHeadline3(String headline3) { this.headline3 = headline3; }
 
     public Set<UserEntity> getMembers() {
         return members;

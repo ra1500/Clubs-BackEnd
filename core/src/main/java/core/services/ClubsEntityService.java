@@ -113,6 +113,9 @@ public class ClubsEntityService {
 
         foundClubsEntity.setClubName(clubsEntityDto.getClubName());
         foundClubsEntity.setDescription(clubsEntityDto.getDescription());
+        foundClubsEntity.setHeadline1(clubsEntityDto.getHeadline1());
+        foundClubsEntity.setHeadline2(clubsEntityDto.getHeadline2());
+        foundClubsEntity.setHeadline3(clubsEntityDto.getHeadline3());
         if (clubsEntityDto.getMaxSize().equals(null)) { foundClubsEntity.setMaxSize(foundClubsEntity.getMaxSize()); };
         if (foundClubsEntity.getMaxSize().equals(null)) { foundClubsEntity.setMaxSize(new Long(20)); };
 
@@ -140,10 +143,10 @@ public class ClubsEntityService {
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
 
         // validation. if club not found, break out.
-        if ( foundClubsEntity == null ) { return "Club not found"; };
+        if ( foundClubsEntity == null ) { return "Forum not found"; };
 
         // validation. ensure user is indeed in club.
-        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return "error. user is not in club"; };
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return "error. user is not in forum"; };
 
         // delete all votes by user in club
         votesRepositoryDAO.deleteAllByVoterAndClub(foundUserEntity, foundClubsEntity);
@@ -170,7 +173,7 @@ public class ClubsEntityService {
             userRepositoryDAO.save(foundUserEntity);
             messagesRepositoryDAO.deleteAllByClubName(foundClubsEntity.getClubName());
             // TODO: delete all msgs between club members.
-            return "Club removed.";
+            return "Forum removed.";
         }
 
         else {
@@ -234,10 +237,85 @@ public class ClubsEntityService {
         userRepositoryDAO.save(foundUserEntity);
         clubsRepositoryDAO.save(foundClubsEntity);
 
-        String userRemoved = "Club removed.";
+        String userRemoved = "Forum removed.";
         return userRemoved;
 
         } // end else
+    }
+
+    // Alpha removes member from club
+    public ClubsEntityDto removeMember(final String alpha, final Long memberId, final Long clubId) {
+
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(alpha);
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
+        UserEntity foundMemberUserEntity = userRepositoryDAO.findOneById(memberId);
+
+        // validation. if club not found, break out.
+        if ( foundClubsEntity == null ) { return new ClubsEntityDto(); };
+
+        // validation. ensure user is indeed in club.
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return new ClubsEntityDto(); };
+
+        // validation. ensure member is indeed in club.
+        if ( !foundClubsEntity.getMembers().contains(foundMemberUserEntity) ) { return new ClubsEntityDto(); };
+
+        // validation. ensure user is indeed in alpha.
+        if ( !foundClubsEntity.getAlpha().equals(alpha) ) { return new ClubsEntityDto(); };
+
+        // delete all votes by user in club
+        votesRepositoryDAO.deleteAllByVoterAndClub(foundMemberUserEntity, foundClubsEntity);
+
+        // delete all alpha votes that for this member
+        votesRepositoryDAO.deleteAllByVoteCastAndClubAndVoteType(foundMemberUserEntity.getUserName(), foundClubsEntity, new Long(1));
+
+        // remove member from the club
+        Set<UserEntity> foundUserEntitySet = foundClubsEntity.getMembers();
+        foundUserEntitySet.removeIf(i -> i.getUserName().equals(foundMemberUserEntity.getUserName()));
+        foundClubsEntity.setMembers(foundUserEntitySet);
+
+        // remove the club from the member
+        Set<ClubsEntity> foundMemberClubSet = foundMemberUserEntity.getClubs();
+        foundMemberClubSet.removeIf(i -> i.getId().equals(clubId));
+        foundMemberUserEntity.setClubs(foundMemberClubSet);
+
+        // update the club's currentSize
+        foundClubsEntity.setCurrentSize(new Long(foundClubsEntity.getMembers().size()));
+
+            userRepositoryDAO.save(foundMemberUserEntity);
+            clubsRepositoryDAO.save(foundClubsEntity);
+
+            return clubsEntityDtoTransformer.generate(foundClubsEntity);
+
+    }
+
+    // Alpha re-assigns another member to be alpha
+    public ClubsEntityDto changeAlpha(final String alpha, final Long memberId, final Long clubId) {
+
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(alpha);
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
+        UserEntity foundMemberUserEntity = userRepositoryDAO.findOneById(memberId);
+
+        // validation. if club not found, break out.
+        if ( foundClubsEntity == null ) { return new ClubsEntityDto(); };
+
+        // validation. ensure user is indeed in club.
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return new ClubsEntityDto(); };
+
+        // validation. ensure member is indeed in club.
+        if ( !foundClubsEntity.getMembers().contains(foundMemberUserEntity) ) { return new ClubsEntityDto(); };
+
+        // validation. ensure user is indeed in alpha.
+        if ( !foundClubsEntity.getAlpha().equals(alpha) ) { return new ClubsEntityDto(); };
+
+        // delete all alpha votes that for this member
+        votesRepositoryDAO.deleteAllByVoteCastAndClubAndVoteType(foundMemberUserEntity.getUserName(), foundClubsEntity, new Long(1));
+
+        // re-assign alpha
+        foundClubsEntity.setAlpha(foundMemberUserEntity.getUserName());
+        clubsRepositoryDAO.save(foundClubsEntity);
+
+        return clubsEntityDtoTransformer.generate(foundClubsEntity);
+
     }
 
 }

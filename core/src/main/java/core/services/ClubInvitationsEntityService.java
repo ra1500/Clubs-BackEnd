@@ -89,9 +89,8 @@ public class ClubInvitationsEntityService {
         // validation. is receiver already in club?
         if ( foundClubsEntity.getMembers().contains(receiverUserEntity) ) { clubInvitationsEntityDto.setReceiver("They are already in the club!"); return clubInvitationsEntityDto; };
 
-        // validation. not a duplicate invitation (sender, receiver, clubId)
-        //TODO:
-        // validation. currently, more than one invitation for same club can be produced if from different sender)
+        // validation. ensure not multiple invitations issued on same club to same user
+        if ( clubInvitationsRepositoryDAO.findOneByReceiverAndClub(receiverUserEntity.getUserName(), foundClubsEntity) != null ) { clubInvitationsEntityDto.setReceiver("This member has already been previously invited to join this club"); return clubInvitationsEntityDto; };
 
         // add the sender's UserEntity
         UserEntity senderUserEntity = userRepositoryDAO.findOneByUserName(user);
@@ -145,16 +144,19 @@ public class ClubInvitationsEntityService {
             // check if club full or not (under max #users). break if true.
             if ( membersCount >= maxSize ) { clubInvitationsEntityDto.setReceiver("Sorry, club is already full."); return clubInvitationsEntityDto; };
 
+            // if club becomes full after joining switch it to private club.
+            if ( membersCount >= maxSize-1 ) { foundClubsEntity.setClubMode(1L); };
+
             members.add(foundUserEntity);
             foundClubsEntity.setMembers(members);
 
             // create the new 'alpha' vote. save it.
-            VotesEntity newAlphaVote = new VotesEntity();
-            newAlphaVote.setVoter(foundUserEntity);
-            newAlphaVote.setClub(foundClubsEntity);
-            newAlphaVote.setVoteType(new Long(1));
-            newAlphaVote.setVoteCast(foundClubsEntity.getAlpha());
-            votesRepositoryDAO.saveAndFlush(newAlphaVote);
+            //  VotesEntity newAlphaVote = new VotesEntity();
+            //  newAlphaVote.setVoter(foundUserEntity);
+            //  newAlphaVote.setClub(foundClubsEntity);
+            //  newAlphaVote.setVoteType(new Long(1));
+            //  newAlphaVote.setVoteCast(foundClubsEntity.getAlpha());
+            //  votesRepositoryDAO.saveAndFlush(newAlphaVote);
 
             foundUserEntity.getClubs().add(foundClubsEntity);
 
@@ -179,5 +181,150 @@ public class ClubInvitationsEntityService {
 
         return clubInvitationsEntityDtoTransformer.generate(foundClubInvitationEntity);
     }
+
+    // GET/POST join a public club
+    public ClubsEntity joinPublicClub(String user, Long clubId)  {
+
+        ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
+        UserEntity foundUserEntity = userRepositoryDAO.findOneByUserName(user);
+
+        // validation. was user already invited into this club?
+        ClubInvitationsEntity foundClubInvitationsEntity = clubInvitationsRepositoryDAO.findOneByReceiverAndClub(user, foundClubsEntity);
+
+        // if yes, already previously invited into this club,then...
+        if ( foundClubInvitationsEntity != null ) {
+            if ( foundClubInvitationsEntity.getStatus().equals(4L) ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears you were removed from " + foundClubsEntity.getClubName() + "."); return messageClubsEntity; };
+            if ( foundClubInvitationsEntity.getStatus().equals(3L) ) {
+                foundClubInvitationsEntity.setStatus(2L); // switch to accepted invitation
+                foundClubInvitationsEntity.setSender(foundUserEntity); // switch sender of invitation to user since it is now public
+                clubInvitationsRepositoryDAO.save(foundClubInvitationsEntity); // save the updated invitation
+
+                // validation. is user already in club? (if so, then just break).
+                if ( foundClubsEntity.getMembers().contains(foundUserEntity) ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("error. user is already in club."); return messageClubsEntity; };
+
+                // check that user is under max.# of clubs can join
+                Integer countOfClubsJoined = foundUserEntity.getClubs().size();
+                if ( countOfClubsJoined > 30 ) {ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears you have reached your maximum number of club memberships."); return messageClubsEntity; } ;
+
+                //ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
+                Long maxSize = foundClubsEntity.getMaxSize();
+                Set<UserEntity> members = foundClubsEntity.getMembers();
+                Integer membersCount = members.size();
+
+                // check if club full or not (under max #users). break if true.
+                if ( membersCount >= maxSize ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears " + foundClubsEntity.getClubName() + " is already full."); return messageClubsEntity; };
+
+                // if club becomes full after joining switch it to private club.
+                if ( membersCount >= maxSize-1 ) { foundClubsEntity.setClubMode(1L); };
+
+                members.add(foundUserEntity);
+                foundClubsEntity.setMembers(members);
+                foundUserEntity.getClubs().add(foundClubsEntity);
+            }; // end indented second-level if
+
+            if ( foundClubInvitationsEntity.getStatus().equals(2L) ) {
+                foundClubInvitationsEntity.setSender(foundUserEntity); // switch sender of invitation to user since it is now public
+                clubInvitationsRepositoryDAO.save(foundClubInvitationsEntity); // save the updated invitation
+
+                // validation. is user already in club? (if so, then just break).
+                if ( foundClubsEntity.getMembers().contains(foundUserEntity) ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("You are already a member of " + foundClubsEntity.getClubName() + "."); return messageClubsEntity; };
+
+                // check that user is under max.# of clubs can join
+                Integer countOfClubsJoined = foundUserEntity.getClubs().size();
+                if ( countOfClubsJoined > 30 ) {ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears you have reached your maximum number of clubs."); return messageClubsEntity; } ;
+
+                //ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
+                Long maxSize = foundClubsEntity.getMaxSize();
+                Set<UserEntity> members = foundClubsEntity.getMembers();
+                Integer membersCount = members.size();
+
+                // check if club full or not (under max #users). break if true.
+                if ( membersCount >= maxSize ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears " + foundClubsEntity.getClubName() + " is already full."); return messageClubsEntity; };
+
+                // if club becomes full after joining switch it to private club.
+                if ( membersCount >= maxSize-1 ) { foundClubsEntity.setClubMode(1L); };
+
+                members.add(foundUserEntity);
+                foundClubsEntity.setMembers(members);
+                foundUserEntity.getClubs().add(foundClubsEntity);
+            }; // end indented second-level if
+
+            if ( foundClubInvitationsEntity.getStatus().equals(1L) ) {
+                foundClubInvitationsEntity.setStatus(2L); // switch to accepted invitation
+                foundClubInvitationsEntity.setSender(foundUserEntity); // switch sender of invitation to user since it is now public
+                clubInvitationsRepositoryDAO.save(foundClubInvitationsEntity); // save the updated invitation
+
+                // validation. is user already in club? (if so, then just break).
+                if ( foundClubsEntity.getMembers().contains(foundUserEntity) ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("error. user is already in club."); return messageClubsEntity; };
+
+                // check that user is under max.# of clubs can join
+                Integer countOfClubsJoined = foundUserEntity.getClubs().size();
+                if ( countOfClubsJoined > 30 ) {ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears you have reached your maximum number of clubs."); return messageClubsEntity; } ;
+
+                //ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
+                Long maxSize = foundClubsEntity.getMaxSize();
+                Set<UserEntity> members = foundClubsEntity.getMembers();
+                Integer membersCount = members.size();
+
+                // check if club full or not (under max #users). break if true.
+                if ( membersCount >= maxSize ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears " + foundClubsEntity.getClubName() + " is already full."); return messageClubsEntity; };
+
+                // if club becomes full after joining switch it to private club.
+                if ( membersCount >= maxSize-1 ) { foundClubsEntity.setClubMode(1L); };
+
+                members.add(foundUserEntity);
+                foundClubsEntity.setMembers(members);
+                foundUserEntity.getClubs().add(foundClubsEntity);
+            }; // end indented second-level if
+
+            clubsRepositoryDAO.save(foundClubsEntity);
+            userRepositoryDAO.save(foundUserEntity);
+
+            ClubsEntity messageClubsEntity = new ClubsEntity();
+            messageClubsEntity.setClubName("You have joined" + foundClubsEntity.getClubName() + "." );
+            return messageClubsEntity;
+         } // end first if
+
+        else {
+            // validation. is user already in club? (if so, then just break).
+            if ( foundClubsEntity.getMembers().contains(foundUserEntity) ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("You are already a member of " + foundClubsEntity.getClubName() + "." ); return messageClubsEntity; };
+
+            // check that user is under max.# of clubs can join
+            Integer countOfClubsJoined = foundUserEntity.getClubs().size();
+            if ( countOfClubsJoined > 30 ) {ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears you have reached your maximum number of clubs."); return messageClubsEntity; } ;
+
+            //ClubsEntity foundClubsEntity = foundClubInvitationEntity.getClub();
+            Long maxSize = foundClubsEntity.getMaxSize();
+            Set<UserEntity> members = foundClubsEntity.getMembers();
+            Integer membersCount = members.size();
+
+            // check if club full or not (under max #users). break if true.
+            if ( membersCount >= maxSize ) { ClubsEntity messageClubsEntity = new ClubsEntity(); messageClubsEntity.setClubName("Sorry, but it appears " + foundClubsEntity.getClubName() + " is already full."); return messageClubsEntity; };
+
+            // if club becomes full after joining switch it to private club.
+            if ( membersCount >= maxSize-1 ) { foundClubsEntity.setClubMode(1L); };
+
+            members.add(foundUserEntity);
+            foundClubsEntity.setMembers(members);
+            foundUserEntity.getClubs().add(foundClubsEntity);
+
+            // create a new invitation
+            ClubInvitationsEntity newClubInvitationsEntity = new ClubInvitationsEntity();
+            newClubInvitationsEntity.setSender(foundUserEntity);
+            newClubInvitationsEntity.setReceiver(user);
+            newClubInvitationsEntity.setStatus(2L);
+            newClubInvitationsEntity.setClub(foundClubsEntity);
+
+            clubsRepositoryDAO.save(foundClubsEntity);
+            userRepositoryDAO.save(foundUserEntity);
+            clubInvitationsRepositoryDAO.save(newClubInvitationsEntity);
+
+            ClubsEntity messageClubsEntity = new ClubsEntity();
+            messageClubsEntity.setClubName("You have joined" + foundClubsEntity.getClubName() + ".");
+            return messageClubsEntity;
+
+        } // end else
+    } // end of method
+
 
 }

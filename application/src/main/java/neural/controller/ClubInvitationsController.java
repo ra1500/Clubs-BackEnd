@@ -2,6 +2,8 @@ package neural.controller;
 
 import core.services.ClubInvitationsEntityService;
 import db.entity.ClubInvitationsEntity;
+import db.entity.ClubsEntity;
+import db.repository.ClubsRepositoryDAO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import model.ClubInvitationsEntityDto;
@@ -21,9 +23,11 @@ import java.util.Set;
 public class ClubInvitationsController extends AbstractRestController {
 
     private ClubInvitationsEntityService clubInvitationsEntityService;
+    private final ClubsRepositoryDAO clubsRepositoryDAO;
 
-    public ClubInvitationsController(ClubInvitationsEntityService clubInvitationsEntityService ) {
+    public ClubInvitationsController(ClubInvitationsEntityService clubInvitationsEntityService, final ClubsRepositoryDAO clubsRepositoryDAO ) {
         this.clubInvitationsEntityService = clubInvitationsEntityService;
+        this.clubsRepositoryDAO = clubsRepositoryDAO;
     }
 
     // GET set of new club invitations.
@@ -72,6 +76,23 @@ public class ClubInvitationsController extends AbstractRestController {
         foundNewClubInvitations.getSender().setContactInfo(null);
 
         return ResponseEntity.ok(foundNewClubInvitations);
+    }
+
+    // GET join a public club.
+    @ApiOperation(value = "joinPublicClub")
+    @RequestMapping(value = "/e", method = RequestMethod.GET)
+    public ResponseEntity<ClubsEntity> joinPublicClub(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("cId") final Long clubId) {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        return ResponseEntity.ok(clubInvitationsEntityService.joinPublicClub(user, clubId));
     }
 
     // POST a new club invitation

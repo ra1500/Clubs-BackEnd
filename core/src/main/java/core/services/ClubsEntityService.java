@@ -1,14 +1,8 @@
 package core.services;
 
 import core.transformers.ClubsEntityDtoTransformer;
-import db.entity.ClubsEntity;
-import db.entity.UserEntity;
-import db.entity.VoteCountsClubAlpha;
-import db.entity.VotesEntity;
-import db.repository.ClubsRepositoryDAO;
-import db.repository.MessagesRepositoryDAO;
-import db.repository.UserRepositoryDAO;
-import db.repository.VotesRepositoryDAO;
+import db.entity.*;
+import db.repository.*;
 import model.ClubsEntityDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +21,16 @@ public class ClubsEntityService {
     private final UserRepositoryDAO userRepositoryDAO;
     private final VotesRepositoryDAO votesRepositoryDAO;
     private final MessagesRepositoryDAO messagesRepositoryDAO;
+    private final ClubInvitationsRepositoryDAO clubInvitationsRepositoryDAO;
 
     public ClubsEntityService(final ClubsRepositoryDAO clubsRepositoryDAO,
-                                  final ClubsEntityDtoTransformer clubsEntityDtoTransformer, final UserRepositoryDAO userRepositoryDAO, VotesRepositoryDAO votesRepositoryDAO, MessagesRepositoryDAO messagesRepositoryDAO) {
+                                  final ClubsEntityDtoTransformer clubsEntityDtoTransformer, final UserRepositoryDAO userRepositoryDAO, VotesRepositoryDAO votesRepositoryDAO, MessagesRepositoryDAO messagesRepositoryDAO, final ClubInvitationsRepositoryDAO clubInvitationsRepositoryDAO) {
         this.clubsRepositoryDAO = clubsRepositoryDAO;
         this.clubsEntityDtoTransformer = clubsEntityDtoTransformer;
         this.userRepositoryDAO = userRepositoryDAO;
         this.votesRepositoryDAO = votesRepositoryDAO;
         this.messagesRepositoryDAO = messagesRepositoryDAO;
+        this.clubInvitationsRepositoryDAO = clubInvitationsRepositoryDAO;
     }
 
     // GET
@@ -116,6 +112,10 @@ public class ClubsEntityService {
         foundClubsEntity.setHeadline1(clubsEntityDto.getHeadline1());
         foundClubsEntity.setHeadline2(clubsEntityDto.getHeadline2());
         foundClubsEntity.setHeadline3(clubsEntityDto.getHeadline3());
+        foundClubsEntity.setHeadline4(clubsEntityDto.getHeadline4());
+        foundClubsEntity.setHeadline5(clubsEntityDto.getHeadline5());
+
+
         if (clubsEntityDto.getMaxSize().equals(null)) { foundClubsEntity.setMaxSize(foundClubsEntity.getMaxSize()); };
         if (foundClubsEntity.getMaxSize().equals(null)) { foundClubsEntity.setMaxSize(new Long(20)); };
 
@@ -127,6 +127,13 @@ public class ClubsEntityService {
         catch (NumberFormatException nfe) { foundClubsEntity.setMaxSize(foundClubsEntity.getMaxSize()); };
 
         // no change in alpha. should be based on max votes, or oldest create date of membership.
+
+        // if maxSize already met, then cant change club to public.
+        Long maxSize = foundClubsEntity.getMaxSize();
+        Set<UserEntity> members = foundClubsEntity.getMembers();
+        Integer membersCount = members.size();
+        if ( membersCount >= maxSize ) { foundClubsEntity.setClubMode(1L); }
+        else { foundClubsEntity.setClubMode(clubsEntityDto.getClubMode()); };
 
         clubsRepositoryDAO.save(foundClubsEntity);
 
@@ -143,10 +150,10 @@ public class ClubsEntityService {
         ClubsEntity foundClubsEntity = clubsRepositoryDAO.findOneById(clubId);
 
         // validation. if club not found, break out.
-        if ( foundClubsEntity == null ) { return "Forum not found"; };
+        if ( foundClubsEntity == null ) { return "Club not found"; };
 
         // validation. ensure user is indeed in club.
-        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return "error. user is not in forum"; };
+        if ( !foundClubsEntity.getMembers().contains(foundUserEntity) ) { return "error. user is not in club"; };
 
         // delete all votes by user in club
         votesRepositoryDAO.deleteAllByVoterAndClub(foundUserEntity, foundClubsEntity);
@@ -164,6 +171,10 @@ public class ClubsEntityService {
         foundUserClubSet.removeIf(i -> i.getId().equals(clubId));
         foundUserEntity.setClubs(foundUserClubSet);
 
+        // update the invitation to 'declined'
+        ClubInvitationsEntity foundClubInvitationsEntity = clubInvitationsRepositoryDAO.findOneByReceiverAndClub(userName, foundClubsEntity);
+        foundClubInvitationsEntity.setStatus(3L);
+
         // update the club's currentSize
         foundClubsEntity.setCurrentSize(new Long(foundClubsEntity.getMembers().size()));
 
@@ -173,7 +184,7 @@ public class ClubsEntityService {
             userRepositoryDAO.save(foundUserEntity);
             messagesRepositoryDAO.deleteAllByClubName(foundClubsEntity.getClubName());
             // TODO: delete all msgs between club members.
-            return "Forum removed.";
+            return "Club removed.";
         }
 
         else {
@@ -236,8 +247,9 @@ public class ClubsEntityService {
 
         userRepositoryDAO.save(foundUserEntity);
         clubsRepositoryDAO.save(foundClubsEntity);
+        clubInvitationsRepositoryDAO.save(foundClubInvitationsEntity);
 
-        String userRemoved = "Forum removed.";
+        String userRemoved = "Club removed.";
         return userRemoved;
 
         } // end else
@@ -281,8 +293,13 @@ public class ClubsEntityService {
         // update the club's currentSize
         foundClubsEntity.setCurrentSize(new Long(foundClubsEntity.getMembers().size()));
 
+        // update the invitation to 'blocked'
+        ClubInvitationsEntity foundClubInvitationsEntity = clubInvitationsRepositoryDAO.findOneByReceiverAndClub(foundMemberUserEntity.getUserName(), foundClubsEntity);
+        foundClubInvitationsEntity.setStatus(4L);
+
             userRepositoryDAO.save(foundMemberUserEntity);
             clubsRepositoryDAO.save(foundClubsEntity);
+            clubInvitationsRepositoryDAO.save(foundClubInvitationsEntity);
 
             return clubsEntityDtoTransformer.generate(foundClubsEntity);
 

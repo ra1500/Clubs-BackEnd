@@ -13,8 +13,8 @@ import java.util.Set;
 public interface ClubsRepositoryDAO extends JpaRepository<ClubsEntity, Long> {
 
     ClubsEntity findOneById(Long id);
-
     ClubsEntity findOneByClubName(String clubName);
+    Set<ClubsEntity> findAllByClubMode(Long clubMode);
 
     @Transactional
     Integer deleteOneById(Long id);

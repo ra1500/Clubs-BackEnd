@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Set;
 
 @RestController
 @RequestMapping(value = "/api/c", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -21,9 +22,10 @@ import java.util.Base64;
 public class ClubsController extends AbstractRestController {
 
     private ClubsEntityService clubsEntityService;
+    private final ClubsRepositoryDAO clubsRepositoryDAO;
 
-    public ClubsController(ClubsEntityService clubsEntityService ) {
-        this.clubsEntityService = clubsEntityService;
+    public ClubsController(ClubsEntityService clubsEntityService, final ClubsRepositoryDAO clubsRepositoryDAO ) {
+        this.clubsEntityService = clubsEntityService; this.clubsRepositoryDAO = clubsRepositoryDAO;
     }
 
     // GET a club (get it's info/details and members list sans this user).
@@ -112,13 +114,11 @@ public class ClubsController extends AbstractRestController {
         final String[] values = credentials.split(":", 2);
         String user = values[0];
 
-        // validation. in service.
-
         ClubsEntityDto savedClubsEntityDto = clubsEntityService.updateClubsEntity(clubsEntityDto, user);
         return ResponseEntity.ok(savedClubsEntityDto);
     }
 
-    // GET alpha delete a member and member's messages
+    // GET alpha delete/remove a member and member's messages
     @RequestMapping(value = "/e", method = RequestMethod.GET)
     public ResponseEntity<ClubsEntityDto> removeMember(
             @RequestHeader("Authorization") String token,
@@ -154,6 +154,31 @@ public class ClubsController extends AbstractRestController {
 
         ClubsEntityDto savedClubsEntityDto = clubsEntityService.changeAlpha(user, memberId, clubId);
         return ResponseEntity.ok(savedClubsEntityDto);
+    }
+
+    // GET Set of public clubs.
+    @ApiOperation(value = "getPublicClubs")
+    @RequestMapping(value = "/g", method = RequestMethod.GET)
+    public ResponseEntity<Set<ClubsEntity>> getPublicClubs(
+            @RequestHeader("Authorization") String token)               {
+
+        String base64Credentials = token.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        // credentials = username:password
+        final String[] values = credentials.split(":", 2);
+        String user = values[0];
+
+        Set<ClubsEntity> foundPublicClubs = clubsRepositoryDAO.findAllByClubMode(2L);
+        for (ClubsEntity x : foundPublicClubs) {
+            x.setFounder(null);
+            x.setHeadline1(null); x.setHeadline2(null); x.setHeadline3(null); x.setHeadline4(null); x.setHeadline5(null);
+            x.setMembers(null);
+            x.setVotes(null);
+        }
+
+        if (foundPublicClubs.isEmpty()) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); }
+        return ResponseEntity.ok(foundPublicClubs);
     }
 
 }

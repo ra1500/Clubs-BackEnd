@@ -17,6 +17,7 @@ public interface ClubInvitationsRepositoryDAO extends JpaRepository<ClubInvitati
     Set<ClubInvitationsEntity> findAllByReceiverAndStatus(String receiver, Long status);
 
     ClubInvitationsEntity findOneBySenderAndReceiverAndClub(UserEntity sender, String receiver, ClubsEntity clubsEntity );
+    ClubInvitationsEntity findOneByReceiverAndClub(String receiver, ClubsEntity clubsEntity );
 
     @Transactional
     Integer deleteOneById(Long id);

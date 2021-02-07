@@ -104,7 +104,7 @@ public class MessagesEntityService {
         List<MessagesEntity> list = twoFriendMembersMessages.getContent();
 
         for (MessagesEntity x : list) {
-            if (x.getRedFlag().equals(new Long(0)) && x.getReceiverId().equals(userEntity.getId()) ) {
+            if (x.getRedFlag().equals(0L) && x.getReceiverId().equals(userEntity.getId()) ) {
                 x.setRedFlag(new Long(1));
                 messagesRepositoryDAO.save(x);}
         }

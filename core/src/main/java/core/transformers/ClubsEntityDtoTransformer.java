@@ -40,6 +40,9 @@ public class ClubsEntityDtoTransformer {
         dto.setHeadline1(clubsEntity.getHeadline1());
         dto.setHeadline2(clubsEntity.getHeadline2());
         dto.setHeadline3(clubsEntity.getHeadline3());
+        dto.setHeadline4(clubsEntity.getHeadline4());
+        dto.setHeadline5(clubsEntity.getHeadline5());
+        dto.setClubMode(clubsEntity.getClubMode());
         dto.setMembers(clubsEntity.getMembers());
         dto.setVotes(clubsEntity.getVotes());
 
@@ -68,6 +71,9 @@ public class ClubsEntityDtoTransformer {
                 dto.getHeadline1(),
                 dto.getHeadline2(),
                 dto.getHeadline3(),
+                dto.getHeadline4(),
+                dto.getHeadline5(),
+                dto.getClubMode(),
                 dto.getMembers(),
                 dto.getVotes()
         );

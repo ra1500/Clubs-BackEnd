@@ -46,6 +46,15 @@ public class ClubsEntityDto implements Serializable {
     @JsonProperty("headline3")
     private String headline3;
 
+    @JsonProperty("headline4")
+    private String headline4;
+
+    @JsonProperty("headline5")
+    private String headline5;
+
+    @JsonProperty("clubMode")
+    private Long clubMode;
+
     @JsonProperty("members")
     private Set<UserEntity> members;
 
@@ -132,6 +141,18 @@ public class ClubsEntityDto implements Serializable {
     public String getHeadline3() { return headline3; }
 
     public void setHeadline3(String headline3) { this.headline3 = headline3; }
+
+    public String getHeadline4() { return headline4; }
+
+    public void setHeadline4(String headline4) { this.headline4 = headline4; }
+
+    public String getHeadline5() { return headline5; }
+
+    public void setHeadline5(String headline5) { this.headline5 = headline5; }
+
+    public Long getClubMode() { return clubMode; }
+
+    public void setClubMode(Long clubMode) { this.clubMode = clubMode; }
 
     public Set<UserEntity> getMembers() {
         return members;

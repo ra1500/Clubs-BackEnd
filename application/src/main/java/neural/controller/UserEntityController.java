@@ -304,30 +304,31 @@ public class UserEntityController extends AbstractRestController {
     }
 
     // POST to add a new user
-    //@RequestMapping(value = "/signup",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-    //public ResponseEntity<UserEntityDto> createUserEntity(
-    //        @Valid
-    //        @RequestBody
-    //        final UserEntityDto userEntityDto) {
+    @RequestMapping(value = "/signup1",method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserEntityDto> createUserEntity1(
+            @Valid
+            @RequestBody
+            final UserEntityDto userEntityDto) {
 
-    //    if (userEntityDto.getUserName().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
-    //   if (userEntityDto.getPassword().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
-    //    if (userEntityRepository.findOneByUserName(userEntityDto.getUserName()) != null ) {
-    //        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    //    }
-     //       userEntityDto.setOccupation("");
-     //       userEntityDto.setEducation(new Long(5));
-      //      userEntityDto.setRelationshipStatus(new Long(3));
-      //      UserEntityDto savedUserEntityDto = userEntityService.createUserEntity(userEntityDto);
+        if (userEntityDto.getUserName().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+        if (userEntityDto.getPassword().length() < 8 ) { return new ResponseEntity<>(HttpStatus.NO_CONTENT); };
+        if (userEntityRepository.findOneByUserName(userEntityDto.getUserName()) != null ) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+            userEntityDto.setOccupation("");
+            userEntityDto.setEducation(new Long(5));
+            userEntityDto.setRelationshipStatus(new Long(3));
+            userEntityDto.setCreator(userEntityDto.getUserName());
+            UserEntityDto savedUserEntityDto = userEntityService.createUserEntity(userEntityDto);
 
-     //       savedUserEntityDto.setId(null);
-     //       savedUserEntityDto.setCreated(null);
-     //       savedUserEntityDto.setPublicProfile(null);
-     //       savedUserEntityDto.setFriendsSet(null);
-     //       savedUserEntityDto.setClubsSet(null);
+            savedUserEntityDto.setId(null);
+            savedUserEntityDto.setCreated(null);
+            savedUserEntityDto.setPublicProfile(null);
+            savedUserEntityDto.setFriendsSet(null);
+            savedUserEntityDto.setClubsSet(null);
 
-     //   return ResponseEntity.ok(savedUserEntityDto);
-    // }
+        return ResponseEntity.ok(savedUserEntityDto);
+     }
 
 
 

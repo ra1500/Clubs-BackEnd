@@ -52,6 +52,15 @@ public class ClubsEntity implements Serializable {
     @Column
     private String headline3;
 
+    @Column
+    private String headline4;
+
+    @Column
+    private String headline5;
+
+    @Column
+    private Long clubMode; // 1= Private, 2= Public
+
     @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "UserEntityId")
@@ -90,7 +99,7 @@ public class ClubsEntity implements Serializable {
         this.votes = votes;
     }
 
-    public ClubsEntity(Long id, Date created, String clubName, String founder, String description, Long maxSize, Long currentSize, String alpha, String headline1, String headline2, String headline3, Set<UserEntity> members, Set<VotesEntity> votes) {
+    public ClubsEntity(Long id, Date created, String clubName, String founder, String description, Long maxSize, Long currentSize, String alpha, String headline1, String headline2, String headline3, String headline4, String headline5, Long clubMode, Set<UserEntity> members, Set<VotesEntity> votes) {
         this.id = id;
         this.created = created;
         this.clubName = clubName;
@@ -102,8 +111,11 @@ public class ClubsEntity implements Serializable {
         this.headline1 = headline1;
         this.headline2 = headline2;
         this.headline3 = headline3;
+        this.headline3 = headline4;
+        this.headline3 = headline5;
         this.members = members;
         this.votes = votes;
+        this.clubMode = clubMode;
     }
 
     public Long getId() { return id; }
@@ -173,6 +185,18 @@ public class ClubsEntity implements Serializable {
     public String getHeadline3() { return headline3; }
 
     public void setHeadline3(String headline3) { this.headline3 = headline3; }
+
+    public String getHeadline4() { return headline4; }
+
+    public void setHeadline4(String headline4) { this.headline4 = headline4; }
+
+    public String getHeadline5() { return headline5; }
+
+    public void setHeadline5(String headline5) { this.headline5 = headline5; }
+
+    public Long getClubMode() { return clubMode; }
+
+    public void setClubMode(Long clubMode) { this.clubMode = clubMode; }
 
     public Set<UserEntity> getMembers() {
         return members;

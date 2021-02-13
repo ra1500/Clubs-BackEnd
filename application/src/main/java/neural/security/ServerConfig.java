@@ -1,4 +1,4 @@
-/*
+/*  // below: uncomment out during deployment. comment out for development
 package neural.security;
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;

@@ -1,4 +1,4 @@
-/* package neural;
+/* package neural; // below: uncomment during deployment. comment out for development
 
 import org.springframework.stereotype.Component;
 

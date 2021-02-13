@@ -18,9 +18,14 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Set;
@@ -92,13 +97,14 @@ public class FileController {
 
         String imageType = file.getContentType();
         if (imageType.equals("image/jpg") || imageType.equals("image/jpeg") ) {
+        //if ( true ) {
 
-            String fileName = fileStorageService.storeFile(file, user, imgNumber);
+            fileStorageService.storeFile(file, user, imgNumber);
 
-            String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/resources/images/")
-                    .path(fileName)
-                    .toUriString();
+            //String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+            //        .path("/resources/images/")
+            //        .path(fileName)
+            //        .toUriString();
 
             String uploadedMessage = "uploaded";
             return ResponseEntity.ok(uploadedMessage);

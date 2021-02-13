@@ -99,6 +99,7 @@ public class LoginConfig extends WebSecurityConfigurerAdapter {
         http
                 .cors();
         // https SSL certificate use
+        // below: uncomment below during deployment. comment out for development.
         //http
         //        .requiresChannel()
         //        .anyRequest()

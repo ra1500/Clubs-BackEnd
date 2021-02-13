@@ -277,6 +277,9 @@ public class ClubInvitationsEntityService {
                 foundUserEntity.getClubs().add(foundClubsEntity);
             }; // end indented second-level if
 
+            // increment the currentSize of the club
+            foundClubsEntity.setCurrentSize(foundClubsEntity.getCurrentSize()+new Long(1));
+
             clubsRepositoryDAO.save(foundClubsEntity);
             userRepositoryDAO.save(foundUserEntity);
 
@@ -314,6 +317,9 @@ public class ClubInvitationsEntityService {
             newClubInvitationsEntity.setReceiver(user);
             newClubInvitationsEntity.setStatus(2L);
             newClubInvitationsEntity.setClub(foundClubsEntity);
+
+            // increment the currentSize of the club
+            foundClubsEntity.setCurrentSize(foundClubsEntity.getCurrentSize()+new Long(1));
 
             clubsRepositoryDAO.save(foundClubsEntity);
             userRepositoryDAO.save(foundUserEntity);
